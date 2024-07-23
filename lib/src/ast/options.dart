@@ -397,7 +397,7 @@ class FontOptions {
 
   @override
   int get hashCode =>
-      hashValues(fontFamily.hashCode, fontWeight.hashCode, fontShape.hashCode);
+      Object.hash(fontFamily.hashCode, fontWeight.hashCode, fontShape.hashCode);
 }
 
 /// Difference between the current [FontOptions] and the desired [FontOptions].
@@ -431,5 +431,5 @@ class PartialFontOptions {
 
   @override
   int get hashCode =>
-      hashValues(fontFamily.hashCode, fontWeight.hashCode, fontShape.hashCode);
+      Object.hash(fontFamily.hashCode, fontWeight.hashCode, fontShape.hashCode);
 }
