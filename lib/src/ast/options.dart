@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'dart:ui';
 import '../font/metrics/font_metrics.dart';
 import 'font_metrics.dart';
 import 'size.dart';
@@ -398,6 +399,7 @@ class FontOptions {
   @override
   int get hashCode =>
       hashValues(fontFamily.hashCode, fontWeight.hashCode, fontShape.hashCode);
+
 }
 
 /// Difference between the current [FontOptions] and the desired [FontOptions].
