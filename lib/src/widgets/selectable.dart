@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
+import 'dart:ui';
 
 import '../ast/options.dart';
 import '../ast/style.dart';
@@ -600,7 +601,7 @@ class SelectionStyle {
   }
 
   @override
-  int get hashCode => hashValues(
+  int get hashCode => Object.hash(
         cursorColor,
         cursorOffset,
         cursorRadius,
