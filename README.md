@@ -118,4 +118,3 @@ This project is possible thanks to the inspirations and resources from [the KaTe
 - [ ] : [UnicodeMath](https://www.unicode.org/notes/tn28/UTN28-PlainTextMath-v3.1.pdf)-style editing
 - [ ] : Breakable equations
 - [ ] : MathML parsing and encoding
-
