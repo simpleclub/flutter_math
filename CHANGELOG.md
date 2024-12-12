@@ -1,3 +1,7 @@
+## 0.7.3
+
+* Add support for flutter 3.27.0
+
 ## 0.7.2
 
 * Fix: add missing import to gesture_detector_builder_selectable.dart (#87)

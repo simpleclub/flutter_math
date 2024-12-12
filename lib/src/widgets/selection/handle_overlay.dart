@@ -168,26 +168,11 @@ class _MathSelectionHandleOverlayState extends State<MathSelectionHandleOverlay>
       math.max((interactiveRect.width - handleRect.width) / 2, 0),
       math.max((interactiveRect.height - handleRect.height) / 2, 0),
     );
-    Widget child;
-    // This is a workaround for the improperly handled breaking change at https://github.com/flutter/flutter/pull/83639#discussion_r653426749.
-    if (widget.selectionControls.buildHandle is Widget Function(
-        BuildContext context,
-        TextSelectionHandleType type,
-        double textLineHeight,
-        VoidCallback? onTap)) {
-      child = (widget.selectionControls.buildHandle)(
-        context,
-        type,
-        widget.manager.preferredLineHeight,
-        null,
-      );
-    } else {
-      child = (widget.selectionControls.buildHandle)(
-        context,
-        type,
-        widget.manager.preferredLineHeight,
-      );
-    }
+    final child = (widget.selectionControls.buildHandle)(
+      context,
+      type,
+      widget.manager.preferredLineHeight,
+    );
 
     return CompositedTransformFollower(
       link: layerLink,
