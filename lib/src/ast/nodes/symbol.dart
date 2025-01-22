@@ -130,6 +130,11 @@ class SymbolNode extends LeafNode {
       mode: mode,
     );
   }
+
+  @override
+  String toString() {
+    return "SymbolNode($symbol)";
+  }
 }
 
 EquationRowNode stringToNode(String string, [Mode mode = Mode.text]) =>

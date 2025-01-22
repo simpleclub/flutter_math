@@ -125,11 +125,11 @@ mixin SelectionManagerMixin<T extends StatefulWidget> on State<T>
       rootOffset.dx.clamp(0.0, rootRenderBox.size.width),
       rootOffset.dy.clamp(0.0, rootRenderBox.size.height),
     );
-    return (controller.ast.greenRoot.key!.currentContext!.findRenderObject()
-                as RenderEditableLine)
+    return (controller.ast.greenRoot.body.first.key!.currentContext!
+                .findRenderObject() as RenderEditableLine)
             .hittestFindLowest<RenderEditableLine>(constrainedOffset) ??
-        controller.ast.greenRoot.key!.currentContext!.findRenderObject()
-            as RenderEditableLine;
+        controller.ast.greenRoot.body.first.key!.currentContext!
+            .findRenderObject() as RenderEditableLine;
   }
 
   RenderBox get rootRenderBox => context.findRenderObject() as RenderBox;
@@ -187,7 +187,7 @@ mixin SelectionManagerMixin<T extends StatefulWidget> on State<T>
   }
 
   Rect getLocalEditingRegion() {
-    final root = controller.ast.greenRoot.key!.currentContext!
+    final root = controller.ast.greenRoot.body.first.key!.currentContext!
         .findRenderObject() as RenderEditableLine;
     return Rect.fromPoints(
       Offset.zero,

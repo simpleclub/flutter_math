@@ -14,11 +14,22 @@ extension SyntaxTreeTexStyleBreakExt on SyntaxTree {
     int binOpPenalty = 700,
     bool enforceNoBreak = true,
   }) {
-    final eqRowBreakResult = greenRoot.texBreak(
-      relPenalty: relPenalty,
-      binOpPenalty: binOpPenalty,
-      enforceNoBreak: true,
-    );
+    final eqRowBreakResult = greenRoot.body
+        .map((e) => e?.texBreak(
+              relPenalty: relPenalty,
+              binOpPenalty: binOpPenalty,
+              enforceNoBreak: true,
+            ))
+        .whereType<BreakResult>()
+        .fold(
+            BreakResult(parts: [], penalties: []),
+            (previousValue, element) => BreakResult(parts: [
+                  ...previousValue.parts,
+                  ...element.parts
+                ], penalties: [
+                  ...previousValue.penalties,
+                  ...element.penalties,
+                ]));
     return BreakResult(
       parts: eqRowBreakResult.parts
           .map((part) => SyntaxTree(greenRoot: part))

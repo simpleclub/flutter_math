@@ -25,6 +25,7 @@ import 'dart:collection';
 import 'dart:ui';
 
 import 'package:collection/collection.dart';
+import 'package:flutter_math_fork/src/ast/nodes/multirow.dart';
 
 import '../../ast/nodes/multiscripts.dart';
 import '../../ast/nodes/over.dart';
@@ -66,7 +67,7 @@ class TexParser {
   Token? nextToken;
 
   /// Get parse result
-  EquationRowNode parse() {
+  MultiRowNode parse() {
     if (!this.settings.globalGroup) {
       this.macroExpander.beginGroup();
     }
@@ -83,7 +84,7 @@ class TexParser {
     if (!this.settings.globalGroup) {
       this.macroExpander.endGroup();
     }
-    return parse.wrapWithEquationRow();
+    return parse.wrapWithMultiRow();
   }
 
   List<GreenNode> parseExpression({

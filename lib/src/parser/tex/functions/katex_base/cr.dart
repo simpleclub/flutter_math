@@ -41,6 +41,25 @@ class CrNode extends TemporaryNode {
     required this.newRow,
     this.size,
   });
+
+  @override
+  int get editingWidth => 1;
+
+  @override
+  BuildResult buildWidget(
+      MathOptions options, List<BuildResult?> childBuildResults) {
+    return BuildResult(
+        widget: Container(
+          height: size?.value,
+        ),
+        options: options);
+  }
+
+  @override
+  AtomType get leftType => AtomType.open;
+
+  @override
+  AtomType get rightType => AtomType.close;
 }
 
 GreenNode _crHandler(TexParser parser, FunctionContext context) {

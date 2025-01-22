@@ -187,7 +187,8 @@ class Math extends StatelessWidget {
       options = MathOptions(
         style: mathStyle,
         fontSize: effectiveTextStyle.fontSize! * textScaleFactor,
-        mathFontOptions: effectiveTextStyle.fontWeight != FontWeight.normal && effectiveTextStyle.fontWeight != null
+        mathFontOptions: effectiveTextStyle.fontWeight != FontWeight.normal &&
+                effectiveTextStyle.fontWeight != null
             ? FontOptions(fontWeight: effectiveTextStyle.fontWeight!)
             : null,
         logicalPpi: logicalPpi,

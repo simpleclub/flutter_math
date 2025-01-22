@@ -4,6 +4,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_math_fork/src/parser/tex/functions/katex_base.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
@@ -15,6 +16,7 @@ import '../utils/wrapper.dart';
 import '../widgets/controller.dart';
 import '../widgets/mode.dart';
 import '../widgets/selectable.dart';
+import 'nodes/multirow.dart';
 import 'nodes/space.dart';
 import 'nodes/sqrt.dart';
 import 'options.dart';
@@ -26,7 +28,7 @@ import 'types.dart';
 /// [Description of Roslyn's Red-Green Tree](https://docs.microsoft.com/en-us/archive/blogs/ericlippert/persistence-facades-and-roslyns-red-green-trees)
 class SyntaxTree {
   /// Root of the green tree
-  final EquationRowNode greenRoot;
+  final MultiRowNode greenRoot;
 
   SyntaxTree({
     required this.greenRoot,
@@ -45,7 +47,7 @@ class SyntaxTree {
       return this;
     }
     if (identical(pos, root)) {
-      return SyntaxTree(greenRoot: newNode.wrapWithEquationRow());
+      return SyntaxTree(greenRoot: newNode.wrapWithMultiRow());
     }
     final posParent = pos.parent;
     if (posParent == null) {
@@ -104,7 +106,7 @@ class SyntaxTree {
         return node1;
       }
     }
-    return greenRoot;
+    return greenRoot.body.last!;
   }
 
   List<GreenNode> findSelectedNodes(int position1, int position2) {
@@ -193,6 +195,7 @@ class SyntaxNode {
   List<BuildResult?> _buildChildWidgets(List<MathOptions> childOptions) {
     assert(children.length == childOptions.length);
     if (children.isEmpty) return const [];
+    print(this.value.toString());
     return List.generate(children.length,
         (index) => children[index]?.buildWidget(childOptions[index]),
         growable: false);
@@ -678,6 +681,11 @@ class EquationRowNode extends ParentableNode<GreenNode>
         overrideType: overrideType ?? this.overrideType,
         children: children ?? this.children,
       );
+
+  @override
+  String toString() {
+    return "$runtimeType(${this.children.map((e) => e.toString()).toString()})";
+  }
 }
 
 mixin _ClipChildrenMixin on ParentableNode<GreenNode> {
@@ -733,6 +741,14 @@ extension GreenNodeWrappingExt on GreenNode {
     return EquationRowNode(children: [this]);
   }
 
+  MultiRowNode wrapWithMultiRow() {
+    if (this is MultiRowNode) {
+      return this as MultiRowNode;
+    }
+    var children = <EquationRowNode>[];
+    return MultiRowNode(body: children);
+  }
+
   /// If this node is [EquationRowNode], its children will be returned. If not,
   /// itself will be returned in a list.
   List<GreenNode> expandEquationRow() {
@@ -767,6 +783,23 @@ extension GreenNodeListWrappingExt on List<GreenNode> {
       return this[0] as EquationRowNode;
     }
     return EquationRowNode(children: this);
+  }
+
+  MultiRowNode wrapWithMultiRow() {
+    if (this.length == 1 && this[0] is EquationRowNode) {
+      return MultiRowNode(body: [this[0] as EquationRowNode]);
+    }
+    var nodes = [<GreenNode>[]];
+    for (var n in this) {
+      nodes.last.add(n);
+      if (n is CrNode) {
+        nodes.add(<GreenNode>[]);
+      }
+    }
+
+    return MultiRowNode(
+      body: nodes.map((e) => EquationRowNode(children: e)).toList(),
+    );
   }
 }
 
@@ -813,7 +846,6 @@ enum AtomType {
   inner,
 
   spacing, // symbols
-
 }
 
 /// Only for improvisional use during parsing. Do not use.
@@ -824,23 +856,25 @@ class TemporaryNode extends LeafNode {
   @override
   BuildResult buildWidget(
           MathOptions options, List<BuildResult?> childBuildResults) =>
-      throw UnsupportedError('Temporary node $runtimeType encountered.');
+      throw UnsupportedError(
+          'Temporary node $runtimeType encountered. buildWidget');
 
   @override
-  AtomType get leftType =>
-      throw UnsupportedError('Temporary node $runtimeType encountered.');
+  AtomType get leftType => throw UnsupportedError(
+      'Temporary node $runtimeType encountered. leftType');
 
   @override
-  AtomType get rightType =>
-      throw UnsupportedError('Temporary node $runtimeType encountered.');
+  AtomType get rightType => throw UnsupportedError(
+      'Temporary node $runtimeType encountered. rightType');
 
   @override
   bool shouldRebuildWidget(MathOptions oldOptions, MathOptions newOptions) =>
-      throw UnsupportedError('Temporary node $runtimeType encountered.');
+      throw UnsupportedError(
+          'Temporary node $runtimeType encountered. shouldRebuildWidget');
 
   @override
-  int get editingWidth =>
-      throw UnsupportedError('Temporary node $runtimeType encountered.');
+  int get editingWidth => throw UnsupportedError(
+      'Temporary node $runtimeType encountered. editingWidth');
 }
 
 class BuildResult {
