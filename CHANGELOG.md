@@ -1,3 +1,7 @@
+## 0.7.4
+
+* Add support for flutter 3.32.0
+
 ## 0.7.3
 
 * Add support for flutter 3.27.0
