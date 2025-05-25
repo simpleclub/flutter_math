@@ -182,19 +182,19 @@ class MathSelectionGestureDetectorBuilder {
   }) =>
       TextSelectionGestureDetector(
         key: key,
-        onTapDown: onTapDown,
+        onTapDown: (value) => onTapDown ?? () {},
         onForcePressStart:
             delegate.forcePressEnabled ? onForcePressStart : null,
         onForcePressEnd: delegate.forcePressEnabled ? onForcePressEnd : null,
-        onSingleTapUp: onSingleTapUp,
+        onSingleTapUp: (value) => onSingleTapUp ?? () {},
         onSingleTapCancel: onSingleTapCancel,
         onSingleLongTapStart: onSingleLongTapStart,
         onSingleLongTapMoveUpdate: onSingleLongTapMoveUpdate,
         onSingleLongTapEnd: onSingleLongTapEnd,
-        onDoubleTapDown: onDoubleTapDown,
-        onDragSelectionStart: onDragSelectionStart,
-        onDragSelectionUpdate: onDragSelectionUpdate,
-        onDragSelectionEnd: onDragSelectionEnd,
+        onDoubleTapDown: (value) => onDoubleTapDown ?? () {},
+        onDragSelectionStart: (value) => onDragSelectionStart ?? () {},
+        onDragSelectionUpdate: (value) => onDragSelectionUpdate ?? () {},
+        onDragSelectionEnd: (value) => onDragSelectionEnd ?? () {},
         behavior: behavior,
         child: child,
       );
