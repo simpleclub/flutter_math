@@ -1,4 +1,5 @@
-import 'package:flutter/rendering.dart';
+import 'package:flutter/rendering.dart'
+    show RenderObjectLayoutCallback, RenderObjectWithLayoutCallbackMixin;
 import 'package:flutter/widgets.dart';
 
 class LayoutBuilderPreserveBaseline
