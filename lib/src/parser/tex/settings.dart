@@ -45,8 +45,8 @@ enum Strict {
 
 /// Settings for [TexParser]
 class TexParserSettings {
-  final bool displayMode; // TODO
-  final bool throwOnError; // TODO
+  final bool displayMode;
+  final bool throwOnError;
 
   /// Extra macros
   final Map<String, MacroDefinition> macros;
@@ -61,7 +61,7 @@ class TexParserSettings {
   /// [TexParserSettings.strict] to [Strict.function]
   final Strict Function(String, String, Token?)? strictFun;
 
-  final bool globalGroup; // TODO
+  final bool globalGroup;
 
   /// Behavior of `\color` command
   ///

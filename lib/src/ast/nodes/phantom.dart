@@ -12,7 +12,7 @@ class PhantomNode extends LeafNode {
   Mode get mode => Mode.math;
 
   /// The phantomed child.
-  // TODO: suppress editbox in edit mode
+  //  suppress editbox in edit mode
   // If we use arbitrary GreenNode here, then we will face the danger of
   // transparent node
   final EquationRowNode phantomChild;

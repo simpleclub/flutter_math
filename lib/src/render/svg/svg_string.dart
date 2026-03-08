@@ -1,6 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+int _colorChannelToInt(double value) =>
+    (value * 255.0).round().clamp(0, 255).toInt();
+
 String svgStringFromPath(
   String path,
   Size viewPort,
@@ -14,7 +17,7 @@ String svgStringFromPath(
     'viewBox='
     '"${viewBox.left} ${viewBox.top} ${viewBox.width} ${viewBox.height}" '
     '>'
-    '<path fill="rgb(${color.red},${color.green},${color.blue})" d="$path"></path>'
+    '<path fill="rgb(${_colorChannelToInt(color.r)},${_colorChannelToInt(color.g)},${_colorChannelToInt(color.b)})" d="$path"></path>'
     '</svg>';
 
 final _alignmentToString = {

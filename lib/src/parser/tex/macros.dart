@@ -134,7 +134,7 @@ String newcommand(MacroContext context, bool existsOK, bool nonexistsOK) {
     var argText = '';
     var token = context.expandNextToken();
     while (token.text != "]" && token.text != "EOF") {
-      // TODO: Should properly expand arg, e.g., ignore {}s
+      // Should properly expand arg, e.g., ignore {}s
       argText += token.text;
       token = context.expandNextToken();
     }
@@ -352,7 +352,7 @@ final Map<String, MacroDefinition> builtinMacros = {
 
 // \newcommand{\macro}[args]{definition}
 // \renewcommand{\macro}[args]{definition}
-// TODO: Optional arguments: \newcommand{\macro}[args][default]{definition}
+// Optional arguments: \newcommand{\macro}[args][default]{definition}
 
   '\\newcommand': MacroDefinition.fromCtxString(
       (context) => newcommand(context, false, true)),
@@ -396,7 +396,7 @@ final Map<String, MacroDefinition> builtinMacros = {
   // '\\aa': MacroDefinition.fromString("\\r a"),
   // '\\AA': MacroDefinition.fromString("\\r A"),
 
-// TODO these should be migrated into renderconfigs
+// these should be migrated into renderconfigs
 // Characters omitted from Unicode range 1D400–1D7FF
   '\u212C': MacroDefinition.fromString("\\mathscr{B}"), // script
   '\u2130': MacroDefinition.fromString("\\mathscr{E}"),
@@ -429,7 +429,7 @@ final Map<String, MacroDefinition> builtinMacros = {
 // It's thus treated like a \mathrel, but defined by a symbol that has zero
 // width but extends to the right.  We use \rlap to get that spacing.
 // For MathML we write U+0338 here. buildMathML.js will then do the overlay.
-// TODO fold 'not' with applicable operators
+// fold 'not' with applicable operators
   // defineMacro(
   //     "\\not",
   //     MacroDefinition.fromString(
@@ -460,7 +460,7 @@ final Map<String, MacroDefinition> builtinMacros = {
 
 // The KaTeX fonts have corners at codepoints that don't match Unicode.
 // For MathML purposes, use the Unicode code point.
-// TODO strip useless @
+// strip useless @
   '\\ulcorner': MacroDefinition.fromString("\\@ulcorner"),
   '\\urcorner': MacroDefinition.fromString("\\@urcorner"),
   '\\llcorner': MacroDefinition.fromString("\\@llcorner"),
@@ -473,7 +473,7 @@ final Map<String, MacroDefinition> builtinMacros = {
 // \kern6\p@\hbox{.}\hbox{.}\hbox{.}}}
 // We'll call \varvdots, which gets a glyph from symbols.js.
 // The zero-width rule gets us an equivalent to the vertical 6pt kern.
-// TODO should we accept \vdots's kern ?
+//should we accept \vdots's kern ?
   '\\vdots':
       MacroDefinition.fromString("\\mathord{\\varvdots\\rule{0pt}{15pt}}"),
   '\u22ee': MacroDefinition.fromString("\\vdots"),
@@ -484,7 +484,7 @@ final Map<String, MacroDefinition> builtinMacros = {
 
 // Italic Greek capital letters.  AMS defines these with \DeclareMathSymbol,
 // but they are equivalent to \mathit{\Letter}.
-// TODO make them as overrided fonts
+// make them as overrided fonts
   '\\varGamma': MacroDefinition.fromString("\\mathit{\\Gamma}"),
   '\\varDelta': MacroDefinition.fromString("\\mathit{\\Delta}"),
   '\\varTheta': MacroDefinition.fromString("\\mathit{\\Theta}"),
@@ -505,7 +505,7 @@ final Map<String, MacroDefinition> builtinMacros = {
 // \mkern-\thinmuskip{:}\mskip6muplus1mu\relax}
 
 // \newcommand{\boxed}[1]{\fbox{\m@th$\displaystyle#1$}}
-// TODO fbox
+//fbox
   '\\boxed': MacroDefinition.fromString("\\fbox{\$\\displaystyle{#1}\$}"),
 
 // \def\iff{\DOTSB\;\Longleftrightarrow\;}
@@ -518,7 +518,7 @@ final Map<String, MacroDefinition> builtinMacros = {
 // AMSMath's automatic \dots, based on \mdots@@ macro.
 
   '\\dots': MacroDefinition.fromCtxString((context) {
-    // TODO: If used in text mode, should expand to \textellipsis.
+    // If used in text mode, should expand to \textellipsis.
     // However, in KaTeX, \textellipsis and \ldots behave the same
     // (in text mode), and it's unlikely we'd see any of the math commands
     // that affect the behavior of \dots when in text mode.  So fine for now
@@ -567,32 +567,32 @@ final Map<String, MacroDefinition> builtinMacros = {
   '\\tmspace': MacroDefinition.fromString(
       "\\TextOrMath{\\kern#1#3}{\\mskip#1#2}\\relax"),
 // \renewcommand{\,}{\tmspace+\thinmuskip{.1667em}}
-// TODO: math mode should use \thinmuskip
+//  math mode should use \thinmuskip
   '\\,': MacroDefinition.fromString("\\tmspace+{3mu}{.1667em}"),
 // \let\thinspace\,
   '\\thinspace': MacroDefinition.fromString("\\,"),
 // \def\>{\mskip\medmuskip}
 // \renewcommand{\:}{\tmspace+\medmuskip{.2222em}}
-// TODO: \> and math mode of \: should use \medmuskip = 4mu plus 2mu minus 4mu
+// \> and math mode of \: should use \medmuskip = 4mu plus 2mu minus 4mu
   '\\>': MacroDefinition.fromString("\\mskip{4mu}"),
   '\\:': MacroDefinition.fromString("\\tmspace+{4mu}{.2222em}"),
 // \let\medspace\:
   '\\medspace': MacroDefinition.fromString("\\:"),
 // \renewcommand{\;}{\tmspace+\thickmuskip{.2777em}}
-// TODO: math mode should use \thickmuskip = 5mu plus 5mu
+//math mode should use \thickmuskip = 5mu plus 5mu
   '\\;': MacroDefinition.fromString("\\tmspace+{5mu}{.2777em}"),
 // \let\thickspace\;
   '\\thickspace': MacroDefinition.fromString("\\;"),
 // \renewcommand{\!}{\tmspace-\thinmuskip{.1667em}}
-// TODO: math mode should use \thinmuskip
+//  math mode should use \thinmuskip
   '\\!': MacroDefinition.fromString("\\tmspace-{3mu}{.1667em}"),
 // \let\negthinspace\!
   '\\negthinspace': MacroDefinition.fromString("\\!"),
 // \newcommand{\negmedspace}{\tmspace-\medmuskip{.2222em}}
-// TODO: math mode should use \medmuskip
+//  math mode should use \medmuskip
   '\\negmedspace': MacroDefinition.fromString("\\tmspace-{4mu}{.2222em}"),
 // \newcommand{\negthickspace}{\tmspace-\thickmuskip{.2777em}}
-// TODO: math mode should use \thickmuskip
+//math mode should use \thickmuskip
   '\\negthickspace': MacroDefinition.fromString("\\tmspace-{5mu}{.277em}"),
 // \def\enspace{\kern.5em }
   '\\enspace': MacroDefinition.fromString("\\kern.5em "),
@@ -604,7 +604,7 @@ final Map<String, MacroDefinition> builtinMacros = {
   '\\qquad': MacroDefinition.fromString("\\hskip2em\\relax"),
 
 // \tag@in@display form of \tag
-// TODO tag
+// tag
   '\\tag': MacroDefinition.fromString("\\@ifstar\\tag@literal\\tag@paren"),
   '\\tag@paren': MacroDefinition.fromString("\\tag@literal{({#1})}"),
   '\\tag@literal': MacroDefinition.fromCtxString((context) {
@@ -622,11 +622,11 @@ final Map<String, MacroDefinition> builtinMacros = {
 // \renewcommand{\pmod}[1]{\pod{{\operator@font mod}\mkern6mu#1}}
 // \newcommand{\mod}[1]{\allowbreak\if@display\mkern18mu
 //   \else\mkern12mu\fi{\operator@font mod}\,\,#1}
-// TODO: math mode should use \medmuskip = 4mu plus 2mu minus 4mu
+//math mode should use \medmuskip = 4mu plus 2mu minus 4mu
   '\\bmod': MacroDefinition.fromString("\\mskip5mu"
       "\\mathbin{\\rm mod}"
       "\\mskip5mu"),
-// TODO what should we do about \pod ?
+// what should we do about \pod ?
   '\\pod': MacroDefinition.fromString("\\allowbreak"
       "\\mkern8mu(#1)"),
   '\\pmod': MacroDefinition.fromString("\\pod{{\\rm mod}\\mkern6mu#1}"),
@@ -640,7 +640,7 @@ final Map<String, MacroDefinition> builtinMacros = {
   '\\\\': MacroDefinition.fromString("\\newline"),
 
 // \def\TeX{T\kern-.1667em\lower.5ex\hbox{E}\kern-.125emX\@}
-// TODO: Doesn't normally work in math mode because \@ fails.  KaTeX doesn't
+// Doesn't normally work in math mode because \@ fails.  KaTeX doesn't
 // support \@ yet, so that's omitted, and we add \text so that the result
 // doesn't look funny in math mode.
 
@@ -680,12 +680,12 @@ final Map<String, MacroDefinition> builtinMacros = {
 
 //////////////////////////////////////////////////////////////////////
 // mathtools.sty migrated to extra_symbols
-// TODO: make as overrided type & font
+// make as overrided type & font
 
 //\providecommand\ordinarycolon{:}
   '\\ordinarycolon': MacroDefinition.fromString(":"),
 //\def\vcentcolon{\mathrel{\mathop\ordinarycolon}}
-//TODO(edemaine): Not yet centered. Fix via \raisebox or #726
+//(edemaine): Not yet centered. Fix via \raisebox or #726
   '\\vcentcolon':
       MacroDefinition.fromString("\\mathrel{\\mathop\\ordinarycolon}"),
 
@@ -727,7 +727,7 @@ final Map<String, MacroDefinition> builtinMacros = {
 // https://en.wikipedia.org/wiki/Help:Displaying_a_formula#Deprecated_syntax
 
 // We also omit texvc's \O, which conflicts with \text{\O}
-// TODO: make as override font
+//make as override font
   '\\darr': MacroDefinition.fromString("\\downarrow"),
   '\\dArr': MacroDefinition.fromString("\\Downarrow"),
   '\\Darr': MacroDefinition.fromString("\\Downarrow"),
@@ -789,7 +789,7 @@ final Map<String, MacroDefinition> builtinMacros = {
   '\\supe': MacroDefinition.fromString("\\supseteq"),
   '\\Tau': MacroDefinition.fromString("\\mathrm{T}"),
   '\\thetasym': MacroDefinition.fromString("\\vartheta"),
-// TODO: '\\varcoppa': MacroDefinition.fromString("\\\mbox{\\coppa}"),
+//'\\varcoppa': MacroDefinition.fromString("\\\mbox{\\coppa}"),
   '\\weierp': MacroDefinition.fromString("\\wp"),
   '\\Zeta': MacroDefinition.fromString("\\mathrm{Z}"),
 

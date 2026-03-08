@@ -65,12 +65,12 @@ class OverNode extends SlotableNode<EquationRowNode> {
   @override
   AtomType get leftType => stackRel
       ? AtomType.rel
-      : AtomType.ord; // TODO: they should align with binrelclass with base
+      : AtomType.ord; // they should align with binrelclass with base
 
   @override
   AtomType get rightType => stackRel
       ? AtomType.rel
-      : AtomType.ord; // TODO: they should align with binrelclass with base
+      : AtomType.ord; // they should align with binrelclass with base
 
   @override
   bool shouldRebuildWidget(MathOptions oldOptions, MathOptions newOptions) =>

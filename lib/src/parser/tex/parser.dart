@@ -24,8 +24,6 @@
 import 'dart:collection';
 import 'dart:ui';
 
-import 'package:collection/collection.dart';
-
 import '../../ast/nodes/multiscripts.dart';
 import '../../ast/nodes/over.dart';
 import '../../ast/nodes/style.dart';
@@ -335,11 +333,11 @@ class TexParser {
   ///
   /// If `optional` is false or absent, this parses an ordinary group,
   /// which is either a single nucleus (like "x") or an expression
-  /// in braces (like "{x+y}") or an implicit group, a group that starts
+  /// in braces (like `"{x+y}"`) or an implicit group, a group that starts
   /// at the current position, and ends right before a higher explicit
   /// group ends, or at EOF.
   /// If `optional` is true, it parses either a bracket-delimited expression
-  /// (like "[x+y]") or returns null to indicate the absence of a
+  /// (like `"[x+y]"`) or returns null to indicate the absence of a
   /// bracket-enclosed group.
   /// If `mode` is present, switches to that mode while parsing the group,
   /// and switches back after.
@@ -616,7 +614,8 @@ class TexParser {
     } else {
       return StyleNode(
         optionsDiff: OptionsDiff(style: MathStyle.text),
-        children: res?.children.whereNotNull().toList(growable: false) ?? [],
+        children: res?.children.nonNulls.toList(growable: false) ??
+            const <GreenNode>[],
       );
     }
   }
@@ -812,7 +811,6 @@ class TexParser {
   }
 
   GreenNode _formatUnsuppotedCmd(String text) {
-    //TODO
     throw UnimplementedError();
   }
 }

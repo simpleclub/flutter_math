@@ -371,7 +371,6 @@ void main() {
       expect(r'\begingroup xy }', toNotParse());
     });
 
-    //TODO
     // test("should produce a semi-simple group", () {
     //   final parse = getParsed(r'\begingroup xy \endgroup');
 
@@ -384,7 +383,6 @@ void main() {
     //   // expect(ord.semisimple).toBeTruthy();
     // });
 
-    //TODO
     // test("should not affect spacing in math mode", () {
     //     expect(r'\begingroup x+ \endgroup y'.toBuildLike(r'x+y');
     // });
@@ -1377,7 +1375,6 @@ void main() {
       expect(m3.body.length, 2);
     });
 
-    // TODO
     // test("should grab \\arraystretch", () {
     //     final parse = getParsed(r'\def\arraystretch{1.5}\begin{matrix}a&b\\c&d\end{matrix}');
     //     expect(parse).toMatchSnapshot();
@@ -1560,7 +1557,7 @@ void main() {
       expect("\\iint\nolimits_i^n", toBuild);
       expect("\\iiint\nolimits_i^n", toBuild);
       expect("\\oint_i^n", toBuild);
-      // expect("\\oiint_i^n",toBuild); // TODO
+      // expect("\\oiint_i^n",toBuild);
       // expect("\\oiiint_i^n",toBuild);
       expect("\\oint\nolimits_i^n", toBuild);
       // expect("\\oiint\nolimits_i^n",toBuild);
@@ -1606,11 +1603,11 @@ void main() {
       expect(r'\mathrm x', toParse());
       expect(r'\mathbb x', toParse());
       expect(r'\mathit x', toParse());
-      // expect(r'\mathnormal x', toParse()); // TODO
+      // expect(r'\mathnormal x', toParse());
       expect(r'\mathrm {x + 1}', toParse());
       expect(r'\mathbb {x + 1}', toParse());
       expect(r'\mathit {x + 1}', toParse());
-      // expect(r'\mathnormal {x + 1}', toParse()); // TODO
+      // expect(r'\mathnormal {x + 1}', toParse());
     });
 
     test("should parse \\mathcal and \\mathfrak", () {
@@ -1645,7 +1642,6 @@ void main() {
           texMathFontOptions["\\mathfrak"]);
     });
 
-    // TODO
     // test("should parse nested font commands", () {
     //     final nestedParse = getParsed(r'\mathbb{R \neq \mathrm{R}}').children[0];
     //     expect(nestedParse.font, "mathbb");
@@ -1759,7 +1755,6 @@ void main() {
           toParse());
     });
 
-    //TODO
     // test("should parse comments in the macro definition", () {
     //     expect("\\def\\foo{1 %}\n2}\n\\foo").toParseLike(r'12');
     // });
@@ -1776,15 +1771,12 @@ void main() {
     testTexToRenderLike("should not produce or consume space",
         "\\text{hello% comment 1\nworld}", r'\text{helloworld}');
 
-    // TODO
     // testTexToRenderLike("should not produce or consume space",
     //     "\\text{hello% comment\n\nworld}", r'\text{hello world}');
 
     testTexToRenderLike(
         "should not include comments in the output", "5 % comment\n", r'5');
   });
-
-// TODO
 // group("A bin builder", () {
 //     test("should create mbins normally", () {
 //         final built = getParsed(r'x + y');
@@ -1815,7 +1807,6 @@ void main() {
 //     });
 // });
 
-// TODO
 // group("A \\phantom builder and \\smash builder", () {
 //     test("should both build a mord", () {
 //         expect(getBuilt(r'\hphantom{a}').children[0].classes).toContain("mord");
@@ -1889,7 +1880,6 @@ void main() {
       expect(r'\vec{x}_2', toBuild);
       expect(r'\vec{x}_2^2', toBuild);
     });
-    // TODO
     // test("should produce mords", () {
     //     expect(getBuilt(r'\vec x').children[0].classes).toContain("mord");
     //     expect(getBuilt(r'\vec +').children[0].classes).toContain("mord");
@@ -2293,7 +2283,6 @@ void main() {
 //     });
 // });
 
-// TODO
 // group("A document fragment", () {
 //     test("should have paddings applied inside an extensible arrow", () {
 //         final markup = katex.renderToString("\\tiny\\xrightarrow\\textcolor{red}{x}");
@@ -2311,7 +2300,6 @@ void main() {
 //     });
 // });
 
-// TODO
 // group("A parser error", () {
 //     test("should report the position of an error", () {
 //         try {
@@ -2474,7 +2462,6 @@ void main() {
     // });
   });
 
-// TODO
 // group("A parser that does not throw on unsupported commands", () {
 //     // The parser breaks on unsupported commands unless it is explicitly
 //     // told not to
@@ -2546,7 +2533,6 @@ void main() {
   });
 
   group("A macro expander", () {
-    // TODO
     // test("should produce individual tokens", () {
     //     expect(r'e^\foo'.toParseLike("e^1 23",
     //         new Settings({macros: {"\\foo": "123"}}));
@@ -2658,7 +2644,7 @@ void main() {
     //     }}));
     // });
 
-    // TODO: The following is not currently possible to get working, given that
+    //  The following is not currently possible to get working, given that
     // functions and macros are dealt with separately.
 /*
     test("should allow for space function arguments", () {
@@ -2768,7 +2754,7 @@ void main() {
       expect(r'\varsubsetneqq\varsupsetneq\varsupsetneqq', toBuild);
     });
 
-    // TODO(edemaine): This doesn't work yet.  Parses like `\text text`,
+    //(edemaine): This doesn't work yet.  Parses like `\text text`,
     // which doesn't treat all four letters as an argument.
     //test("\\TextOrMath should work in a macro passed to \\text", () {
     //    expect(r'\text\mode'.toParseLike(r`([r'\text{text}', new Settings({macros:
@@ -2790,7 +2776,7 @@ void main() {
     //     expect(r'\gdef\foo\bar', toParse());
     //     expect(r'\gdef{\foo\bar}{}'.not, toParse());
     //     expect(r'\gdef{}{}'.not, toParse());
-    //     // TODO: These shouldn't work, but `1` and `{1}` are currently treated
+    //     //  These shouldn't work, but `1` and `{1}` are currently treated
     //     // the same, as are `\foo(r' and '){\foo}`.
     //     //expect(r'\gdef\foo1'.not, toParse());
     //     //expect(r'\gdef{\foo}{}'.not, toParse());
@@ -2814,7 +2800,7 @@ void main() {
 
     // test("\\global needs to followed by \\def", () => {
     //     expect(r'\global\def\foo{}\foo'.toParseLike(r'');
-    //     // TODO: This doesn't work yet; \global needs to expand argument.
+    //     //  This doesn't work yet; \global needs to expand argument.
     //     //expect(r'\def\DEF{\def}\global\DEF\foo{}\foo'.toParseLike(r'');
     //     expect(r'\global\foo'.not, toParse());
     //     expect(r'\global\bar x'.not, toParse());
@@ -2953,7 +2939,7 @@ void main() {
         r'\operatorname*{arg\,max}');
   });
 
-// TODO
+//
 // group("\\tag support", () {
 //     final displayMode = new Settings({displayMode: true});
 
@@ -3018,10 +3004,10 @@ void main() {
 //     });
 // });
 
-// TODO
+//
 // group("Unicode accents", () {
 //     test("should parse Latin-1 letters in math mode", () {
-//         // TODO(edemaine): Unsupported Latin-1 letters in math: ÇÐÞçðþ
+//         // (edemaine): Unsupported Latin-1 letters in math: ÇÐÞçðþ
 //         expect(`ÀÁÂÃÄÅÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝàáâãäåèéêëìíîïñòóôõöùúûüýÿ`
 //         .toParseLike(
 //             r(r'\grave A\acute A\hat A\tilde A\ddot A\mathring A') +
@@ -3041,7 +3027,7 @@ void main() {
 //     });
 
 //     test("should parse Latin-1 letters in text mode", () {
-//         // TODO(edemaine): Unsupported Latin-1 letters in text: ÇÐÞçðþ
+//         //(edemaine): Unsupported Latin-1 letters in text: ÇÐÞçðþ
 //         expect(`\text{ÀÁÂÃÄÅÈÉÊËÌÍÎÏÑÒÓÔÕÖÙÚÛÜÝàáâãäåèéêëìíîïñòóôõöùúûüýÿ}`
 //         .toParseLike(
 //             r(r'\text{\')A\'A\^A\~A\"A\r A` +
@@ -3084,7 +3070,7 @@ void main() {
 // });
 
   group("Unicode", () {
-    // TODO
+    //
     // test("should parse negated relations", () {
     //   expect(r'∉∤∦≁≆≠≨≩≮≯≰≱⊀⊁⊈⊉⊊⊋⊬⊭⊮⊯⋠⋡⋦⋧⋨⋩⋬⋭⪇⪈⪉⪊⪵⪶⪹⪺⫋⫌', toParse());
     // });
@@ -3097,7 +3083,7 @@ void main() {
       expect(r'∏∐∑∫∬∭∮⋀⋁⋂⋃⨀⨁⨂⨄⨆', toBuildStrict);
     });
 
-    // TODO
+    //
     // test("should build more relations", () {
     //   expect(
     //     r'⊂⊃⊆⊇⊏⊐⊑⊒⊢⊣⊩⊪⊸⋈⋍⋐⋑⋔⋛⋞⋟⌢⌣⩾⪆⪌⪕⪖⪯⪰⪷⪸⫅⫆≘≙≚≛≝≞≟≲⩽⪅≶⋚⪋',

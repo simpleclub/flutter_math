@@ -1,16 +1,34 @@
 import 'size.dart';
 
-/// Math styles for equation elements.
+/// Controls how TeX layout is built for an expression.
 ///
-/// \displaystyle \textstyle etc.
+/// Use [display] for standalone equations and [text] for inline math inside a
+/// sentence. The cramped and script variants are TeX layout styles that are
+/// mostly used internally for fractions, subscripts, superscripts, and nested
+/// expressions.
 enum MathStyle {
+  /// Display-style math for standalone equations.
   display,
+
+  /// Display-style math with cramped vertical spacing.
   displayCramped,
+
+  /// Inline math used inside surrounding text.
   text,
+
+  /// Inline math with cramped vertical spacing.
   textCramped,
+
+  /// Smaller style used in superscripts and similar nested layouts.
   script,
+
+  /// Script style with cramped vertical spacing.
   scriptCramped,
+
+  /// The smallest style used in deeply nested superscripts and subscripts.
   scriptscript,
+
+  /// Scriptscript style with cramped vertical spacing.
   scriptscriptCramped,
 }
 

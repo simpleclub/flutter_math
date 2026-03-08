@@ -168,7 +168,7 @@ String? _checkDelimiter(GreenNode delim, FunctionContext context) {
         return delim.symbol;
       }
     } else {
-      // TODO: this throw omitted the token location
+      //this throw omitted the token location
       throw ParseException(
           "Invalid delimiter '${delim.symbol}' after '${context.funcName}'");
     }

@@ -96,7 +96,7 @@ void main() {
       final selectableMath = tester.state<InternalSelectableMathState>(
           find.byType(InternalSelectableMath));
       // selectable text cannot open keyboard.
-      // TODO
+      //
       // await tester.showKeyboard(find.byType(InternalSelectableMath));
       // expect(tester.testTextInput.hasAnyClients, false);
       // await skipPastScrollingAnimation(tester);

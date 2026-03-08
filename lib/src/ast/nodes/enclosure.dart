@@ -60,7 +60,7 @@ class EnclosureNode extends SlotableNode<EquationRowNode> {
               ? BoxDecoration(
                   color: backgroundcolor,
                   border: Border.all(
-                    // TODO minRuleThickness
+                    //  minRuleThickness
                     width:
                         options.fontMetrics.fboxrule.cssEm.toLpUnder(options),
                     color: bordercolor ?? options.color,

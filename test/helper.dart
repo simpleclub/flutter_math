@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_math_fork/ast.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:flutter_math_fork/src/parser/tex/parser.dart';
@@ -14,20 +17,21 @@ void testTexToMatchGoldenFile(
   double scale = 1,
 }) {
   testWidgets(description, (WidgetTester tester) async {
-    tester.binding.window.physicalSizeTestValue =
-        Size(500 * scale, 300 * scale);
-    tester.binding.window.devicePixelRatioTestValue = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.physicalSize = Size(500 * scale, 300 * scale);
+    tester.view.devicePixelRatio = 1.0;
     final key = GlobalKey();
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: Center(
             child: RepaintBoundary(
+              key: key,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Math.tex(
                   expression,
-                  key: key,
                   options: MathOptions(
                     style: MathStyle.display,
                     fontSize: scale * MathOptions.defaultFontSize,
@@ -93,11 +97,11 @@ void testTexToRenderLike(
         home: Scaffold(
           body: Center(
             child: RepaintBoundary(
+              key: key,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Math.tex(
                   expression1,
-                  key: key,
                   options: MathOptions(
                     fontSize: MathOptions.defaultFontSize,
                     style: MathStyle.display,
@@ -110,13 +114,7 @@ void testTexToRenderLike(
       ),
     );
     await tester.pumpAndSettle();
-    if (Platform.isWindows) {
-      // Android-specific code
-      await expectLater(
-          find.byKey(key),
-          matchesGoldenFile(
-              'golden/temp/${(description + expression1 + expression2).hashCode}.png'));
-    }
+    final firstImage = await _captureWidgetImage(tester, key);
 
     final key2 = GlobalKey();
     await tester.pumpWidget(
@@ -124,11 +122,11 @@ void testTexToRenderLike(
         home: Scaffold(
           body: Center(
             child: RepaintBoundary(
+              key: key2,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Math.tex(
                   expression2,
-                  key: key2,
                   options: MathOptions(
                     fontSize: MathOptions.defaultFontSize,
                     style: MathStyle.display,
@@ -141,14 +139,61 @@ void testTexToRenderLike(
       ),
     );
     await tester.pumpAndSettle();
-    if (Platform.isWindows) {
-      // Android-specific code
-      await expectLater(
-          find.byKey(key2),
-          matchesGoldenFile(
-              'golden/temp/${(description + expression1 + expression2).hashCode}.png'));
+    final secondImage = await _captureWidgetImage(tester, key2);
+
+    expect(
+      secondImage.width,
+      firstImage.width,
+      reason: 'Rendered width mismatch for "$description"',
+    );
+    expect(
+      secondImage.height,
+      firstImage.height,
+      reason: 'Rendered height mismatch for "$description"',
+    );
+    expect(
+      listEquals(secondImage.bytes, firstImage.bytes),
+      isTrue,
+      reason: 'Rendered pixels mismatch for "$description"',
+    );
+  });
+}
+
+Future<_CapturedImage> _captureWidgetImage(WidgetTester tester, Key key) async {
+  final boundary = tester.renderObject<RenderRepaintBoundary>(find.byKey(key));
+  final capturedImage = await tester.runAsync(() async {
+    final image = await boundary.toImage(pixelRatio: 1.0);
+    try {
+      final byteData =
+          await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      if (byteData == null) {
+        throw StateError('Failed to capture image bytes for widget.');
+      }
+      return _CapturedImage(
+        width: image.width,
+        height: image.height,
+        bytes: byteData.buffer.asUint8List(),
+      );
+    } finally {
+      image.dispose();
     }
   });
+  if (capturedImage == null) {
+    throw StateError('Failed to capture image for widget.');
+  }
+  return capturedImage;
+}
+
+class _CapturedImage {
+  const _CapturedImage({
+    required this.width,
+    required this.height,
+    required this.bytes,
+  });
+
+  final int width;
+  final int height;
+  final Uint8List bytes;
 }
 
 const strictSettings = TexParserSettings(strict: Strict.error);

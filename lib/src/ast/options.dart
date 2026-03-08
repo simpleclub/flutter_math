@@ -45,6 +45,12 @@ class MathOptions {
   /// Math-mode font options will override each other.
   final FontOptions? mathFontOptions;
 
+  /// Flutter text style used for shaped text-mode runs such as `\text{...}`.
+  final TextStyle? textModeTextStyle;
+
+  /// Locale forwarded to shaped text-mode runs.
+  final Locale? textLocale;
+
   /// Size multiplier applied to equation elements.
   late final double sizeMultiplier = this.size.sizeMultiplier;
 
@@ -78,6 +84,8 @@ class MathOptions {
     this.sizeUnderTextStyle = MathSize.normalsize,
     this.textFontOptions,
     this.mathFontOptions,
+    this.textModeTextStyle,
+    this.textLocale,
     // required this.maxSize,
     // required this.minRuleThickness,
   });
@@ -95,6 +103,8 @@ class MathOptions {
     MathSize sizeUnderTextStyle = MathSize.normalsize,
     FontOptions? textFontOptions,
     FontOptions? mathFontOptions,
+    TextStyle? textModeTextStyle,
+    Locale? textLocale,
     double? fontSize,
     double? logicalPpi,
     // required this.maxSize,
@@ -114,6 +124,8 @@ class MathOptions {
       sizeUnderTextStyle: sizeUnderTextStyle,
       mathFontOptions: mathFontOptions,
       textFontOptions: textFontOptions,
+      textModeTextStyle: textModeTextStyle,
+      textLocale: textLocale,
     );
   }
 
@@ -233,6 +245,8 @@ class MathOptions {
     MathSize? sizeUnderTextStyle,
     FontOptions? textFontOptions,
     FontOptions? mathFontOptions,
+    TextStyle? textModeTextStyle,
+    Locale? textLocale,
     // double maxSize,
     // num minRuleThickness,
   }) =>
@@ -244,6 +258,8 @@ class MathOptions {
         sizeUnderTextStyle: sizeUnderTextStyle ?? this.sizeUnderTextStyle,
         textFontOptions: textFontOptions ?? this.textFontOptions,
         mathFontOptions: mathFontOptions ?? this.mathFontOptions,
+        textModeTextStyle: textModeTextStyle ?? this.textModeTextStyle,
+        textLocale: textLocale ?? this.textLocale,
         // maxSize: maxSize ?? this.maxSize,
         // minRuleThickness: minRuleThickness ?? this.minRuleThickness,
       );

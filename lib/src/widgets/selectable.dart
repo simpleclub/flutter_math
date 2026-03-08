@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tuple/tuple.dart';
 
@@ -17,12 +18,67 @@ import 'exception.dart';
 import 'math.dart';
 import 'mode.dart';
 import 'selection/cursor_timer_manager.dart';
-import 'selection/focus_manager.dart';
 import 'selection/overlay_manager.dart';
 import 'selection/selection_manager.dart';
 import 'selection/web_selection_manager.dart';
 
 const defaultSelection = TextSelection.collapsed(offset: -1);
+
+/// Configures which context-menu actions are enabled for [SelectableMath].
+@immutable
+class SelectableMathToolbarOptions {
+  /// Creates toolbar options for [SelectableMath].
+  const SelectableMathToolbarOptions({
+    this.copy = true,
+    this.cut = false,
+    this.paste = false,
+    this.selectAll = true,
+  });
+
+  /// Whether the copy action should be available.
+  final bool copy;
+
+  /// Whether the cut action should be available.
+  ///
+  /// This is currently ignored because [SelectableMath] is read-only.
+  final bool cut;
+
+  /// Whether the paste action should be available.
+  ///
+  /// This is currently ignored because [SelectableMath] is read-only.
+  final bool paste;
+
+  /// Whether the select-all action should be available.
+  final bool selectAll;
+
+  /// Returns a copy of this configuration with the provided fields replaced.
+  SelectableMathToolbarOptions copyWith({
+    bool? copy,
+    bool? cut,
+    bool? paste,
+    bool? selectAll,
+  }) {
+    return SelectableMathToolbarOptions(
+      copy: copy ?? this.copy,
+      cut: cut ?? this.cut,
+      paste: paste ?? this.paste,
+      selectAll: selectAll ?? this.selectAll,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is SelectableMathToolbarOptions &&
+        other.copy == copy &&
+        other.cut == cut &&
+        other.paste == paste &&
+        other.selectAll == selectAll;
+  }
+
+  @override
+  int get hashCode => Object.hash(copy, cut, paste, selectAll);
+}
 
 /// Selectable math widget.
 ///
@@ -31,13 +87,17 @@ const defaultSelection = TextSelection.collapsed(offset: -1);
 /// pointer selection. The selected region can be encoded into TeX and copied
 /// to clipboard.
 ///
-/// See [SelectableText] as this widget aims to fully imitate its behavior.
+/// Use [SelectableMath] when users need to copy or inspect the TeX selection.
+/// If you only need display, prefer [Math] for lower overhead.
+///
+/// See [SelectableText] as this widget aims to imitate its selection behavior.
 class SelectableMath extends StatelessWidget {
-  /// SelectableMath default constructor.
+  /// Creates selectable math from an already parsed [SyntaxTree].
   ///
-  /// Requires either a parsed [ast] or a [parseException].
+  /// Provide either a built [ast] or a [parseException].
   ///
-  /// See [SelectableMath] for its member documentation.
+  /// Most applications should prefer [SelectableMath.tex], which parses a TeX
+  /// string and returns a ready-to-use widget.
   const SelectableMath({
     Key? key,
     this.ast,
@@ -58,13 +118,9 @@ class SelectableMath extends StatelessWidget {
     this.textScaleFactor,
     this.textSelectionControls,
     this.textStyle,
-    ToolbarOptions? toolbarOptions,
+    SelectableMathToolbarOptions? toolbarOptions,
   })  : assert(ast != null || parseException != null),
-        toolbarOptions = toolbarOptions ??
-            const ToolbarOptions(
-              selectAll: true,
-              copy: true,
-            ),
+        toolbarOptions = toolbarOptions ?? const SelectableMathToolbarOptions(),
         super(key: key);
 
   /// The equation to display.
@@ -139,29 +195,31 @@ class SelectableMath extends StatelessWidget {
   /// {@macro flutter.widgets.editableText.showCursor}
   final bool showCursor;
 
-  /// {@macro flutter.widgets.editableText.textScaleFactor}
+  /// Multiplier applied to the effective text size before rendering.
+  ///
+  /// When null, the equation follows the ambient [MediaQuery] text scaling.
   final double? textScaleFactor;
 
   /// Optional delegate for building the text selection handles and toolbar.
   ///
-  /// Just works like [EditableText.selectionControls]
+  /// Works like [EditableText.selectionControls].
   final TextSelectionControls? textSelectionControls;
 
-  /// {@macro fluttermath.widgets.math.textStyle}
+  /// {@macro flutter_math_fork.widgets.math.textStyle}
   final TextStyle? textStyle;
 
-  /// Configuration of toolbar options.
+  /// Configuration of context menu options.
   ///
-  /// Paste and cut will be disabled regardless.
+  /// Paste and cut are disabled regardless because this widget is read-only.
   ///
-  /// If not set, select all and copy will be enabled by default.
-  final ToolbarOptions toolbarOptions;
+  /// If not set, copy and select-all are enabled by default.
+  final SelectableMathToolbarOptions toolbarOptions;
 
-  /// SelectableMath builder using a TeX string
+  /// Creates selectable math from a TeX [expression].
   ///
   /// {@macro flutter_math_fork.widgets.math.tex_builder}
   ///
-  /// See alse:
+  /// See also:
   ///
   /// * [SelectableMath.mathStyle]
   /// * [SelectableMath.textStyle]
@@ -185,7 +243,7 @@ class SelectableMath extends StatelessWidget {
     double? textScaleFactor,
     TextSelectionControls? textSelectionControls,
     TextStyle? textStyle,
-    ToolbarOptions? toolbarOptions,
+    SelectableMathToolbarOptions? toolbarOptions,
   }) {
     SyntaxTree? ast;
     ParseException? parseError;
@@ -195,7 +253,7 @@ class SelectableMath extends StatelessWidget {
       parseError = e;
     } on Object catch (e) {
       parseError = ParseException('Unsanitized parse exception detected: $e.'
-          'Please report this error with correponding input.');
+          'Please report this error with corresponding input.');
     }
     return SelectableMath(
       key: key,
@@ -235,18 +293,27 @@ class SelectableMath extends StatelessWidget {
           .merge(const TextStyle(fontWeight: FontWeight.bold));
     }
 
-    final textScaleFactor =
-        this.textScaleFactor ?? MediaQuery.textScaleFactorOf(context);
+    final baseFontSize =
+        effectiveTextStyle.fontSize ?? MathOptions.defaultFontSize;
+    final scaledFontSize = this.textScaleFactor != null
+        ? baseFontSize * this.textScaleFactor!
+        : MediaQuery.textScalerOf(context).scale(baseFontSize);
+    final effectiveColor = effectiveTextStyle.color ??
+        DefaultTextStyle.of(context).style.color ??
+        Colors.black;
 
     final options = this.options ??
         MathOptions(
           style: mathStyle,
-          fontSize: effectiveTextStyle.fontSize! * textScaleFactor,
-          mathFontOptions: effectiveTextStyle.fontWeight != FontWeight.normal && effectiveTextStyle.fontWeight != null
+          fontSize: scaledFontSize,
+          mathFontOptions: effectiveTextStyle.fontWeight != FontWeight.normal &&
+                  effectiveTextStyle.fontWeight != null
               ? FontOptions(fontWeight: effectiveTextStyle.fontWeight!)
               : null,
+          textModeTextStyle: effectiveTextStyle,
+          textLocale: Localizations.maybeLocaleOf(context),
           logicalPpi: logicalPpi,
-          color: effectiveTextStyle.color!,
+          color: effectiveColor,
         );
 
     // A trial build to catch any potential build errors
@@ -257,7 +324,7 @@ class SelectableMath extends StatelessWidget {
     } on Object catch (e) {
       return onErrorFallback(
           BuildException('Unsanitized build exception detected: $e.'
-              'Please report this error with correponding input.'));
+              'Please report this error with corresponding input.'));
     }
 
     final theme = Theme.of(context);
@@ -395,7 +462,7 @@ class InternalSelectableMath extends StatefulWidget {
 
   final TextSelectionControls textSelectionControls;
 
-  final ToolbarOptions toolbarOptions;
+  final SelectableMathToolbarOptions toolbarOptions;
 
   @override
   InternalSelectableMathState createState() => InternalSelectableMathState();
@@ -404,12 +471,14 @@ class InternalSelectableMath extends StatefulWidget {
 class InternalSelectableMathState extends State<InternalSelectableMath>
     with
         AutomaticKeepAliveClientMixin,
-        FocusManagerMixin,
+        TextSelectionDelegate,
         SelectionManagerMixin,
         SelectionOverlayManagerMixin,
         WebSelectionControlsManagerMixin,
         SingleTickerProviderStateMixin,
         CursorTimerManagerMixin {
+  static InternalSelectableMathState? _activeSelectableMath;
+
   TextSelectionControls get textSelectionControls =>
       widget.textSelectionControls;
 
@@ -455,7 +524,7 @@ class InternalSelectableMathState extends State<InternalSelectableMath>
       _didAutoFocus = true;
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          FocusScope.of(context).autofocus(widget.focusNode!);
+          FocusScope.of(context).autofocus(focusNode);
         }
       });
     }
@@ -464,8 +533,54 @@ class InternalSelectableMathState extends State<InternalSelectableMath>
   @override
   void dispose() {
     _oldFocusNode.removeListener(updateKeepAlive);
-    super.dispose();
+    if (_activeSelectableMath == this) {
+      _activeSelectableMath = null;
+    }
     controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void requestFocusForInteraction() {
+    final activeSelectableMath = _activeSelectableMath;
+    if (activeSelectableMath != null &&
+        activeSelectableMath != this &&
+        activeSelectableMath.mounted) {
+      activeSelectableMath.handleSelectionChanged(
+        defaultSelection,
+        null,
+        ExtraSelectionChangedCause.unfocus,
+      );
+    }
+    _activeSelectableMath = this;
+    focusNode.requestFocus();
+  }
+
+  @override
+  void handleSelectionChanged(
+    TextSelection selection,
+    SelectionChangedCause? cause, [
+    ExtraSelectionChangedCause? extraCause,
+  ]) {
+    if (extraCause == ExtraSelectionChangedCause.unfocus) {
+      if (_activeSelectableMath == this) {
+        _activeSelectableMath = null;
+      }
+    } else if (extraCause != ExtraSelectionChangedCause.exterior) {
+      final activeSelectableMath = _activeSelectableMath;
+      if (activeSelectableMath != null &&
+          activeSelectableMath != this &&
+          activeSelectableMath.mounted) {
+        activeSelectableMath.handleSelectionChanged(
+          defaultSelection,
+          null,
+          ExtraSelectionChangedCause.unfocus,
+        );
+      }
+      _activeSelectableMath = this;
+    }
+
+    super.handleSelectionChanged(selection, cause, extraCause);
   }
 
   void onSelectionChanged(
@@ -490,38 +605,57 @@ class InternalSelectableMathState extends State<InternalSelectableMath>
 
     final child = controller.ast.buildWidget(widget.options);
 
-    return selectionGestureDetectorBuilder.buildGestureDetector(
-      child: MouseRegion(
-        cursor: SystemMouseCursors.text,
-        child: CompositedTransformTarget(
-          link: toolbarLayerLink,
-          child: MultiProvider(
-            providers: [
-              Provider.value(value: FlutterMathMode.select),
-              ChangeNotifierProvider.value(value: controller),
-              ProxyProvider<MathController, TextSelection>(
-                create: (context) => const TextSelection.collapsed(offset: -1),
-                update: (context, value, previous) => value.selection,
+    return Focus.withExternalFocusNode(
+      focusNode: focusNode,
+      includeSemantics: false,
+      child: TapRegion(
+        groupId: toolbarLayerLink,
+        onTapOutside: (_) {
+          if (controller.selection == defaultSelection) {
+            return;
+          }
+          handleSelectionChanged(
+            defaultSelection,
+            null,
+            ExtraSelectionChangedCause.unfocus,
+          );
+        },
+        child: selectionGestureDetectorBuilder.buildGestureDetector(
+          behavior: HitTestBehavior.translucent,
+          child: MouseRegion(
+            cursor: SystemMouseCursors.text,
+            child: CompositedTransformTarget(
+              link: toolbarLayerLink,
+              child: MultiProvider(
+                providers: [
+                  Provider.value(value: FlutterMathMode.select),
+                  ChangeNotifierProvider.value(value: controller),
+                  ProxyProvider<MathController, TextSelection>(
+                    create: (context) =>
+                        const TextSelection.collapsed(offset: -1),
+                    update: (context, value, previous) => value.selection,
+                  ),
+                  Provider.value(
+                    value: SelectionStyle(
+                      cursorColor: widget.cursorColor,
+                      cursorOffset: widget.cursorOffset,
+                      cursorRadius: widget.cursorRadius,
+                      cursorWidth: widget.cursorWidth,
+                      cursorHeight: widget.cursorHeight,
+                      selectionColor: widget.selectionColor,
+                      paintCursorAboveText: widget.paintCursorAboveText,
+                    ),
+                  ),
+                  Provider.value(
+                    value: Tuple2(startHandleLayerLink, endHandleLayerLink),
+                  ),
+                  // We can't just provide an AnimationController, otherwise
+                  // Provider will throw
+                  Provider.value(value: Wrapper(cursorBlinkOpacityController)),
+                ],
+                child: child,
               ),
-              Provider.value(
-                value: SelectionStyle(
-                  cursorColor: widget.cursorColor,
-                  cursorOffset: widget.cursorOffset,
-                  cursorRadius: widget.cursorRadius,
-                  cursorWidth: widget.cursorWidth,
-                  cursorHeight: widget.cursorHeight,
-                  selectionColor: widget.selectionColor,
-                  paintCursorAboveText: widget.paintCursorAboveText,
-                ),
-              ),
-              Provider.value(
-                value: Tuple2(startHandleLayerLink, endHandleLayerLink),
-              ),
-              // We can't just provide an AnimationController, otherwise
-              // Provider will throw
-              Provider.value(value: Wrapper(cursorBlinkOpacityController)),
-            ],
-            child: child,
+            ),
           ),
         ),
       ),
@@ -553,10 +687,103 @@ class InternalSelectableMathState extends State<InternalSelectableMath>
   double get preferredLineHeight => widget.options.fontSize;
 
   @override
-  dynamic noSuchMethod(Invocation invocation) {
-    // We override noSuchMethod since we do not have concrete implementations
-    // for all methods of the selection manager mixins.
-    throw NoSuchMethodError.withInvocation(this, invocation);
+  List<ContextMenuButtonItem> get contextMenuButtonItems {
+    return <ContextMenuButtonItem>[
+      if (copyEnabled)
+        ContextMenuButtonItem(
+          type: ContextMenuButtonType.copy,
+          onPressed: () => copySelection(SelectionChangedCause.toolbar),
+        ),
+      if (selectAllEnabled && !_selectionCoversAllContent)
+        ContextMenuButtonItem(
+          type: ContextMenuButtonType.selectAll,
+          onPressed: () => selectAll(SelectionChangedCause.toolbar),
+        ),
+    ];
+  }
+
+  bool get _selectionCoversAllContent =>
+      controller.selection.start == 0 &&
+      controller.selection.end == controller.ast.greenRoot.capturedCursor - 1;
+
+  @override
+  void bringIntoView(TextPosition position) {
+    final targetContext = controller.ast.greenRoot.key?.currentContext;
+    if (targetContext == null) {
+      return;
+    }
+    Scrollable.ensureVisible(
+      targetContext,
+      duration: Duration.zero,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+    );
+  }
+
+  @override
+  void copySelection(SelectionChangedCause cause) {
+    if (controller.selection.isCollapsed) {
+      return;
+    }
+
+    final selectedText = textEditingValue.selection.textInside(
+      textEditingValue.text,
+    );
+    if (selectedText.isEmpty) {
+      return;
+    }
+
+    Clipboard.setData(ClipboardData(text: selectedText));
+
+    if (cause != SelectionChangedCause.toolbar) {
+      return;
+    }
+
+    switch (Theme.of(context).platform) {
+      case TargetPlatform.android:
+      case TargetPlatform.fuchsia:
+        controller.selection = defaultSelection;
+        break;
+      case TargetPlatform.iOS:
+        hideToolbar(false);
+        break;
+      case TargetPlatform.macOS:
+      case TargetPlatform.linux:
+      case TargetPlatform.windows:
+        hideToolbar();
+        break;
+    }
+  }
+
+  @override
+  void cutSelection(SelectionChangedCause cause) {}
+
+  @override
+  Future<void> pasteText(SelectionChangedCause cause) async {}
+
+  @override
+  void selectAll(SelectionChangedCause cause) {
+    final fullSelection = TextSelection(
+      baseOffset: 0,
+      extentOffset: controller.ast.greenRoot.capturedCursor - 1,
+    );
+    handleSelectionChanged(
+      fullSelection,
+      cause,
+      cause == SelectionChangedCause.toolbar
+          ? ExtraSelectionChangedCause.handle
+          : null,
+    );
+    if (cause == SelectionChangedCause.toolbar) {
+      bringIntoView(fullSelection.extent);
+    }
+  }
+
+  @override
+  void userUpdateTextEditingValue(
+    TextEditingValue value,
+    SelectionChangedCause cause,
+  ) {
+    textEditingValue = value;
   }
 }
 

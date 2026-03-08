@@ -1,121 +1,222 @@
-# Flutter Math
+# Flutter Math Fork
 
-[![Build Status](https://travis-ci.com/znjameswu/flutter_math.svg?branch=master)](https://travis-ci.com/znjameswu/flutter_math) [![codecov](https://codecov.io/gh/znjameswu/flutter_math/branch/master/graph/badge.svg)](https://codecov.io/gh/znjameswu/flutter_math) [![Pub Version](https://img.shields.io/pub/v/flutter_math_fork)](https://pub.dev/packages/flutter_math_fork)
+[![Pub Version](https://img.shields.io/pub/v/flutter_math_fork)](https://pub.dev/packages/flutter_math_fork)
 
+Math equation rendering in pure Dart and Flutter, with a parser derived from
+[KaTeX](https://github.com/KaTeX/KaTeX).
 
-## ⚠ fork
+## Fork status
 
-This is a fork of [flutter_math](https://github.com/znjameswu/flutter_math) addressing compatibility
-problems while `flutter_math` is not being maintained. 
+`flutter_math_fork` is a maintained fork of
+[flutter_math](https://github.com/znjameswu/flutter_math), with active updates
+in [simpleclub/flutter_math](https://github.com/simpleclub/flutter_math) to keep
+the package working on current Flutter stable releases.
 
----
+This release is tested with Flutter `3.38.9` on the stable channel.
 
+## Features
 
+* TeX math parsing and rendering in pure Flutter.
+* Selectable math with copy and select-all support.
+* Shaped multilingual text inside `\text{...}`, including mixed inline math.
+* Manual parser and AST APIs for advanced integrations.
+* TeX-style line breaking support.
 
-Math equation rendering in pure Dart & Flutter. 
+Unsupported or partially supported KaTeX features are documented in
+[doc/unsupported.md](doc/unsupported.md).
 
+## Unicode and UTF-8 support
 
-This project aims to achieve maximum compatibility and fidelity with regard to the [KaTeX](https://github.com/KaTeX/KaTeX) project, while maintaining the performance advantage of Dart and Flutter. A further [UnicodeMath](https://www.unicode.org/notes/tn28/UTN28-PlainTextMath-v3.1.pdf)-style equation editing support will be experimented in the future.
+Unicode input is supported, but not as unrestricted plain-text input in every
+parser mode. For multilingual text mixed with math, the recommended path is
+`\text{...}`.
 
+Short version: Unicode/UTF-8 works, but not 100% in every parser mode,
+script, or font setup.
 
-The TeX parser is a Dart port of the KaTeX parser. There are only a few unsupported features and parsing differences compared to the original KaTeX parser. List of some unsupported features can be found [here](doc/unsupported.md).
+What works:
 
-## [Online Demo](https://znjameswu.github.io/flutter_math_demo/)
+* Unicode math symbols supported by the parser, such as Greek letters,
+  arrows, operators, and many mathematical Unicode code points.
+* Unicode text inside `\text{...}`.
+* Complex-script shaping inside `\text{...}` for scripts such as Bangla,
+  Arabic, Hindi, Japanese, and more, mixed with math on the same line.
+* The same `\text{...}` shaping path in both `Math.tex` and
+  `SelectableMath.tex`.
+* Top-level Unicode text with the default parser settings or with
+  `TexParserSettings(strict: Strict.ignore)`.
 
-## Rendering Samples
+Important limits:
 
-`x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}`
+* If you use `TexParserSettings(strict: Strict.error)`, top-level Unicode text
+  in math mode is rejected by design.
+* Raw Unicode typed directly in math mode is still treated as math content,
+  not as normal paragraph text.
+* Correct shaping still depends on the app or device having a font that
+  supports the script. This package can shape the text run, but it does not
+  bundle every script font.
+* Font metrics and spacing are primarily tuned for math. Arbitrary Unicode,
+  especially emoji and unsupported scripts, may render with fallback fonts but
+  should not be considered fully TeX-equivalent.
 
-![Example1](https://raw.githubusercontent.com/znjameswu/flutter_math/master/doc/img/delta.png)
+Examples:
 
-`i\hbar\frac{\partial}{\partial t}\Psi(\vec x,t) = -\frac{\hbar}{2m}\nabla^2\Psi(\vec x,t)+ V(\vec x)\Psi(\vec x,t)`
-
-![Example2](https://raw.githubusercontent.com/znjameswu/flutter_math/master/doc/img/schrodinger.png)
-
-`\hat f(\xi) = \int_{-\infty}^\infty f(x)e^{- 2\pi i \xi x}\mathrm{d}x`
-
-![Example3](https://raw.githubusercontent.com/znjameswu/flutter_math/master/doc/img/fourier.png)
-
-
-## How to use
-
-Add `flutter_math` to your `pubspec.yaml` dependencies
-
-### Mobile
-Currently only Android platform has been tested. If you encounter any issues with iOS, please file them.
-
-### Web
-Web support is added in v0.1.6. It is tested for DomCanvas backend. In general it should behave largely the same with mobile. It is expected to break with CanvasKit backend. Check out the [Online Demo](https://znjameswu.github.io/flutter_math_demo/)
-
-## API usage (v0.2.0)
-The usage is straightforward. Just `Math.tex(r'\frac a b')`. There is also optional arguments of `TexParserSettings settings`, which corresponds to  Settings in KaTeX and support a subset of its features.
-
-Display-style equations:
 ```dart
-Math.tex(r'\frac a b', mathStyle: MathStyle.display) // Default
+Math.tex(r'\text{বাংলা } + x^2 = 25');
+
+Math.tex(
+  r'\text{العربية } + x^2 = 25',
+);
+
+SelectableMath.tex(
+  r'\text{हिन्दी } + \frac{a}{b}',
+);
+
+Math.tex(
+  'বাংলা 試 é',
+  settings: const TexParserSettings(strict: Strict.ignore),
+)
 ```
 
-In-line equations
-```dart
-Math.tex(r'\frac a b', mathStyle: MathStyle.text)
+Rendered sample:
+
+`x = \frac{-b+\sqrt{b^2-4ac}}{2a}\quad \text{বাংলা}, \text{العربية}, \text{हिन्दी}, \text{日本語}, \text{中国人} + x^2 = 25`
+
+![Multilingual inline sample](doc/img/unicode-inline.png)
+
+If you need arbitrary multilingual paragraph text, use Flutter's `Text` or
+`RichText` for the prose and use `flutter_math_fork` for the math parts or for
+explicit text runs inside `\text{...}`.
+
+## Installation
+
+Add the package to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  flutter_math_fork: ^0.8.0
 ```
 
-The default size of the equation is obtained from the build context. If you wish to specify the size, you can use `textStyle`. Note: this parameter will also change how big 1cm/1pt/1inch is rendered on the screen. If you wish to specify the size of those absolute units, use `logicalPpi`
+The current release targets Flutter `3.38.0` or newer.
+
+## Quick start
+
+Render a display equation:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+
+Math.tex(
+  r'x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}',
+  mathStyle: MathStyle.display,
+  textStyle: const TextStyle(fontSize: 24),
+)
+```
+
+Render inline math:
 
 ```dart
 Math.tex(
   r'\frac a b',
-  textStyle: TextStyle(fontSize: 42),
-  // logicalPpi: MathOptions.defaultLogicalPpiFor(42),
+  mathStyle: MathStyle.text,
 )
 ```
 
-There is also a selectable variant `SelectableMath` that creates selectable and copy-able equations on both mobile and web. (EXPERIMENTAL) Users can select part of the equation and obtain the encoded TeX strings. The usage is similar to Flutter's `SelectableText`.
+Control sizing explicitly with `MathOptions`:
 
-```dart
-SelectableMath.tex(r'\frac a b', textStyle: TextStyle(fontSize: 42))
-```
-
-If you would like to display custom styled error message, you should use `onErrorFallback` parameter. You can also process the errors in this function. But beware this function is called in build function.
 ```dart
 Math.tex(
-  r'\garbled $tring', 
-  textStyle: TextStyle(color: Colors.green),
-  onErrorFallback: (err) => Container(
-    color: Colors.red,
-    child: Text(err.messageWithType, style: TextStyle(color: Colors.yellow)),
+  r'\int_0^\infty e^{-x^2}\,\mathrm{d}x',
+  options: MathOptions(
+    style: MathStyle.display,
+    fontSize: 22,
   ),
 )
 ```
 
-If you wish to have more granularity dealing with equations, you can manually invoke the parser and supply AST into the widget.
-```dart
-SyntaxTree ast;
-try {
-  ast = SyntaxTree(greenRoot: TexParser(r'\frac a b', TexParserSettings()).parse());
-} on ParseException catch (e) {
-  // Handle my error here
-}
+## Selectable math
 
-SelectableMath(
-  ast: ast,
-  mathStyle: MathStyle.text,
-  textStyle: TextStyle(fontSize: 42),
+Use `SelectableMath` when the user should be able to select or copy the TeX:
+
+```dart
+SelectableMath.tex(
+  r'\frac a b',
+  textStyle: const TextStyle(fontSize: 24),
+  toolbarOptions: const SelectableMathToolbarOptions(
+    copy: true,
+    selectAll: true,
+  ),
 )
 ```
 
-## [Line Breaking](doc/line_breaking.md)
+Starting with `0.8.0`, `SelectableMath.toolbarOptions` uses the package-owned
+`SelectableMathToolbarOptions` type instead of Flutter's deprecated
+`ToolbarOptions`.
+
+## Error handling
+
+Provide `onErrorFallback` to render your own widget when parsing or building
+fails:
+
+```dart
+Math.tex(
+  r'\garbled $tring',
+  onErrorFallback: (err) => Container(
+    color: Colors.red,
+    padding: const EdgeInsets.all(8),
+    child: Text(
+      err.messageWithType,
+      style: const TextStyle(color: Colors.white),
+    ),
+  ),
+)
+```
+
+## Advanced usage
+
+For manual parsing and AST handling:
+
+```dart
+import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:flutter_math_fork/tex.dart';
+
+final ast = SyntaxTree(
+  greenRoot: TexParser(
+    r'\frac a b',
+    const TexParserSettings(),
+  ).parse(),
+);
+
+final widget = SelectableMath(
+  ast: ast,
+  mathStyle: MathStyle.text,
+  textStyle: const TextStyle(fontSize: 24),
+);
+```
+
+See also:
+
+* [doc/line_breaking.md](doc/line_breaking.md)
+* [doc/design.md](doc/design.md)
+
+## Rendering samples
+
+`x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}`
+
+![Quadratic equation](doc/img/delta.png)
+
+`i\hbar\frac{\partial}{\partial t}\Psi(\vec x,t) = -\frac{\hbar}{2m}\nabla^2\Psi(\vec x,t)+ V(\vec x)\Psi(\vec x,t)`
+
+![Schrodinger equation](doc/img/schrodinger.png)
+
+`\hat f(\xi) = \int_{-\infty}^\infty f(x)e^{- 2\pi i \xi x}\mathrm{d}x`
+
+![Fourier transform](doc/img/fourier.png)
 
 ## Credits
-This project is possible thanks to the inspirations and resources from [the KaTeX Project](https://katex.org/), [MathJax](www.mathjax.org), [Zefyr](https://github.com/memspace/zefyr), and [CaTeX](https://github.com/simpleclub/CaTeX).
 
-## Goals
-- [x] : TeX math parsing (See [design doc](doc/design.md))
-- [x] : AST rendering in flutter
-- [x] : Selectable widget
-- [x] : TeX output (WIP)
-- [ ] : UnicodeMath parsing and encoding
-- [ ] : [UnicodeMath](https://www.unicode.org/notes/tn28/UTN28-PlainTextMath-v3.1.pdf)-style editing
-- [ ] : Breakable equations
-- [ ] : MathML parsing and encoding
-
+This project draws heavily from the work of
+[KaTeX](https://katex.org/), [MathJax](https://www.mathjax.org/),
+[Zefyr](https://github.com/memspace/zefyr), and
+[CaTeX](https://github.com/simpleclub/CaTeX).

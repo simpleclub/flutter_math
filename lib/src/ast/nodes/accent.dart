@@ -105,7 +105,7 @@ class AccentNode extends SlotableNode<EquationRowNode> {
               padding: EdgeInsets.only(bottom: 3 * defaultRuleThickness),
               child: Container(
                 width: constraints.minWidth,
-                height: defaultRuleThickness, // TODO minRuleThickness
+                height: defaultRuleThickness, //  minRuleThickness
                 color: options.color,
               ),
             );

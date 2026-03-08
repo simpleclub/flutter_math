@@ -22,6 +22,15 @@ const Map<String, List<List<int>>> scriptData = {
     [0x0400, 0x04ff]
   ],
 
+  // Arabic and related blocks used for Arabic-script languages.
+  'arabic': [
+    [0x0600, 0x06FF], // Arabic
+    [0x0750, 0x077F], // Arabic Supplement
+    [0x08A0, 0x08FF], // Arabic Extended-A
+    [0xFB50, 0xFDFF], // Arabic Presentation Forms-A
+    [0xFE70, 0xFEFF], // Arabic Presentation Forms-B
+  ],
+
   // The Brahmic scripts of South and Southeast Asia
   // Devanagari (0900–097F)
   // Bengali (0980–09FF)
@@ -51,7 +60,7 @@ const Map<String, List<List<int>>> scriptData = {
     [0x3000, 0x30FF], // CJK symbols and punctuation, Hiragana, Katakana
     [0x4E00, 0x9FAF], // CJK ideograms
     [0xFF00, 0xFF60], // Fullwidth punctuation
-    // TODO: add halfwidth Katakana and Romanji glyphs
+    // add halfwidth Katakana and Romanji glyphs
   ],
 
   // Korean

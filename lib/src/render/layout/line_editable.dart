@@ -297,6 +297,8 @@ class RenderEditableLine extends RenderLine {
   EquationRowNode node;
 
   /// {@template flutter.rendering.editable.paintCursorOnTop}
+  /// Whether to paint the cursor above the text.
+  /// {@endtemplate}
   bool get paintCursorAboveText => _paintCursorAboveText;
   bool _paintCursorAboveText;
   set paintCursorAboveText(bool value) {
@@ -461,8 +463,9 @@ class RenderEditableLine extends RenderLine {
 
   void _paintCaret(Canvas canvas, Offset baselineOffset) {
     final paint = Paint()
-      ..color =
-          _cursorColor.withOpacity(_cursorBlinkOpacityController?.value ?? 0);
+      ..color = _cursorColor.withValues(
+        alpha: _cursorBlinkOpacityController?.value ?? 0,
+      );
 
     Rect _caretPrototype;
 

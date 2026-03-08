@@ -178,7 +178,7 @@ class MatrixNode extends SlotableNode<EquationRowNode?> {
               .mapIndexed((index, result) => result == null
                   ? null
                   : CustomLayoutId(id: index, child: result.widget))
-              .whereNotNull()
+              .nonNulls
               .toList(growable: false),
         ),
       ),
@@ -206,12 +206,12 @@ class MatrixNode extends SlotableNode<EquationRowNode?> {
   @override
   MatrixNode updateChildren(List<EquationRowNode> newChildren) {
     assert(newChildren.length >= rows * cols);
-    var body = List<List<EquationRowNode>>.generate(
+    final updatedBody = List<List<EquationRowNode>>.generate(
       rows,
-      (i) => newChildren.sublist(i * cols + (i + 1) * cols),
+      (i) => newChildren.sublist(i * cols, (i + 1) * cols),
       growable: false,
     );
-    return copyWith(body: body);
+    return copyWith(body: updatedBody);
   }
 
   MatrixNode copyWith({
@@ -340,15 +340,13 @@ class MatrixLayoutDelegate extends IntrinsicLayoutDelegate<int> {
     // Determine position of children
     final childPos = List.generate(rows * cols, (index) {
       final col = index % cols;
-      switch (columnAligns[col]) {
-        case MatrixColumnAlign.left:
-          return colPos[col];
-        case MatrixColumnAlign.right:
-          return colPos[col] + colWidths[col] - childWidths[index];
-        case MatrixColumnAlign.center:
-        default:
-          return colPos[col] + (colWidths[col] - childWidths[index]) / 2;
-      }
+      return switch (columnAligns[col]) {
+        MatrixColumnAlign.left => colPos[col],
+        MatrixColumnAlign.right =>
+          colPos[col] + colWidths[col] - childWidths[index],
+        MatrixColumnAlign.center =>
+          colPos[col] + (colWidths[col] - childWidths[index]) / 2,
+      };
     }, growable: false);
 
     if (!isComputingIntrinsics) {
@@ -461,7 +459,8 @@ class MatrixLayoutDelegate extends IntrinsicLayoutDelegate<int> {
                 paint);
           }
           break;
-        default:
+        case MatrixSeparatorStyle.none:
+          break;
       }
     }
 
@@ -493,7 +492,8 @@ class MatrixLayoutDelegate extends IntrinsicLayoutDelegate<int> {
                 paint);
           }
           break;
-        default:
+        case MatrixSeparatorStyle.none:
+          break;
       }
     }
   }

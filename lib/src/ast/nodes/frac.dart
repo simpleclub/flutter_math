@@ -23,7 +23,7 @@ class FracNode extends SlotableNode<EquationRowNode> {
   final Measurement? barSize;
 
   /// Whether it is a continued frac `\cfrac`.
-  final bool continued; // TODO continued
+  final bool continued; //  continued
 
   FracNode({
     // this.options,

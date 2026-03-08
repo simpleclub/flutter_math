@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart' show AdaptiveTextSelectionToolbar;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -157,7 +158,9 @@ class MathSelectionOverlay {
   void hideHandles() {
     if (_handles != null) {
       _handles![0].remove();
+      _handles![0].dispose();
       _handles![1].remove();
+      _handles![1].dispose();
       _handles = null;
     }
   }
@@ -207,7 +210,9 @@ class MathSelectionOverlay {
   void hide() {
     if (_handles != null) {
       _handles![0].remove();
+      _handles![0].dispose();
       _handles![1].remove();
+      _handles![1].dispose();
       _handles = null;
     }
     if (_toolbar != null) {
@@ -219,9 +224,12 @@ class MathSelectionOverlay {
   ///
   /// To hide the whole overlay, see [hide].
   void hideToolbar() {
-    assert(_toolbar != null);
+    if (_toolbar == null) {
+      return;
+    }
     _toolbarController.stop();
     _toolbar!.remove();
+    _toolbar!.dispose();
     _toolbar = null;
   }
 
@@ -236,71 +244,51 @@ class MathSelectionOverlay {
     if ((_selection.isCollapsed &&
             position == MathSelectionHandlePosition.end) ||
         selectionControls == null) {
-      return Container();
+      return const SizedBox.shrink();
     } // hide the second handle when collapsed
-    return Visibility(
-      visible: handlesVisible,
-      child: MathSelectionHandleOverlay(
-        manager: manager,
-        onSelectionHandleChanged: (TextSelection newSelection) {
-          _handleSelectionHandleChanged(newSelection, position);
-        },
-        onSelectionHandleTapped: onSelectionHandleTapped,
-        startHandleLayerLink: startHandleLayerLink,
-        endHandleLayerLink: endHandleLayerLink,
-        selection: _selection,
-        selectionControls: selectionControls!,
-        position: position,
-        dragStartBehavior: dragStartBehavior,
+    return TapRegion(
+      groupId: toolbarLayerLink,
+      child: Visibility(
+        visible: handlesVisible,
+        child: MathSelectionHandleOverlay(
+          manager: manager,
+          onSelectionHandleChanged: (TextSelection newSelection) {
+            _handleSelectionHandleChanged(newSelection, position);
+          },
+          onSelectionHandleTapped: onSelectionHandleTapped,
+          startHandleLayerLink: startHandleLayerLink,
+          endHandleLayerLink: endHandleLayerLink,
+          selection: _selection,
+          selectionControls: selectionControls!,
+          position: position,
+          dragStartBehavior: dragStartBehavior,
+        ),
       ),
     );
   }
 
   Widget _buildToolbar(BuildContext context) {
-    if (selectionControls == null) return Container();
+    if (manager.contextMenuButtonItems.isEmpty) return const SizedBox.shrink();
 
-    // Find the horizontal midpoint, just above the selected text.
     final endpoint1 = manager.getLocalEndpointForPosition(_selection.start);
-
     final endpoint2 = manager.getLocalEndpointForPosition(_selection.end);
-
-    final editingRegion = manager.getLocalEditingRegion();
-
-    final isMultiline = false; // TODO
-    // endpoints.last.point.dy - endpoints.first.point.dy >
-    // manager.preferredLineHeight / 2;
-
-    // If the selected text spans more than 1 line, horizontally center the
-    // toolbar.
-    // Derived from both iOS and Android.
-    final midX = isMultiline
-        ? editingRegion.width / 2
-        : (endpoint1.dx + endpoint2.dx) / 2;
-
-    final midpoint = Offset(
-      midX,
-      // The y-coordinate won't be made use of most likely.
-      endpoint1.dy - manager.preferredLineHeight,
+    final anchors = TextSelectionToolbarAnchors.fromSelection(
+      renderBox: manager.rootRenderBox,
+      startGlyphHeight: manager.preferredLineHeight,
+      endGlyphHeight: manager.preferredLineHeight,
+      selectionEndpoints: [
+        TextSelectionPoint(endpoint1, TextDirection.ltr),
+        TextSelectionPoint(endpoint2, TextDirection.ltr),
+      ],
     );
 
     return FadeTransition(
       opacity: _toolbarOpacity,
-      child: CompositedTransformFollower(
-        link: toolbarLayerLink,
-        showWhenUnlinked: false,
-        offset: -editingRegion.topLeft,
-        child: selectionControls!.buildToolbar(
-          context,
-          editingRegion,
-          manager.preferredLineHeight,
-          midpoint,
-          [
-            TextSelectionPoint(endpoint1, TextDirection.ltr),
-            TextSelectionPoint(endpoint2, TextDirection.ltr),
-          ],
-          manager,
-          clipboardStatus!,
-          null,
+      child: TapRegion(
+        groupId: toolbarLayerLink,
+        child: AdaptiveTextSelectionToolbar.buttonItems(
+          anchors: anchors,
+          buttonItems: manager.contextMenuButtonItems,
         ),
       ),
     );

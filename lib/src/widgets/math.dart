@@ -12,29 +12,31 @@ import 'exception.dart';
 import 'mode.dart';
 import 'selectable.dart';
 
+/// Signature for rendering an alternative widget when parsing or building fails.
 typedef OnErrorFallback = Widget Function(FlutterMathException errmsg);
 
 /// Static, non-selectable widget for equations.
 ///
-/// Sample usage:
+/// Use [Math] when you only need rendering and do not need selection or copy
+/// support. Compared to [SelectableMath], it has less overhead and is usually
+/// the better default for read-only equations.
+///
+/// Example:
 ///
 /// ```dart
 /// Math.tex(
 ///   r'\frac a b\sqrt[3]{n}',
 ///   mathStyle: MathStyle.display,
-///   textStyle: TextStyle(fontSize: 42),
+///   textStyle: const TextStyle(fontSize: 42),
 /// )
 /// ```
-///
-/// Compared to [SelectableMath], [Math] will offer a significant performance
-/// advantage. So if no selection capability is needed or the equation counts
-/// on the same screen is huge, it's preferable to use [Math].
 class Math extends StatelessWidget {
-  /// Math widget default constructor
+  /// Creates a math widget from an already parsed [SyntaxTree].
   ///
-  /// Requires either a parsed [ast] or a [parseError].
+  /// Provide either a built [ast] or a [parseError].
   ///
-  /// See [Math] for its member documentation
+  /// Most applications should prefer [Math.tex], which parses a TeX string and
+  /// returns a ready-to-use widget.
   const Math({
     Key? key,
     this.ast,
@@ -53,13 +55,13 @@ class Math extends StatelessWidget {
   /// It can be null only when [parseError] is not null.
   final SyntaxTree? ast;
 
-  /// {@template flutter_math_fork.widgets.math.options}
-  /// Equation style.
+  /// {@template flutter_math_fork.widgets.math.mathStyle}
+  /// Layout style for the rendered equation.
   ///
   /// Choose [MathStyle.display] for displayed equations and [MathStyle.text]
-  /// for in-line equations.
+  /// for inline equations.
   ///
-  /// Will be overruled if [options] is present.
+  /// Ignored when [options] is provided.
   /// {@endtemplate}
   final MathStyle mathStyle;
 
@@ -70,64 +72,78 @@ class Math extends StatelessWidget {
   /// [TextStyle.fontSize]. You can obtain the default scaled value by
   /// [MathOptions.defaultLogicalPpiFor].
   ///
-  /// Will be overruled if [options] is present.
+  /// Ignored when [options] is provided.
   ///
   /// {@endtemplate}
   final double? logicalPpi;
 
   /// {@template flutter_math_fork.widgets.math.onErrorFallback}
-  /// Fallback widget when there are uncaught errors during parsing or building.
+  /// Fallback widget used when parsing or building fails.
   ///
-  /// Will be invoked when:
+  /// Called when:
   ///
-  /// * [parseError] is not null.
-  /// * [SyntaxTree.buildWidget] throw an error.
+  /// * a stored parse exception is already present.
+  /// * [SyntaxTree.buildWidget] throws an error.
   ///
-  /// Either case, this fallback function is invoked in build functions. So use
-  /// with care.
+  /// This callback runs during build, so it should stay cheap and avoid side
+  /// effects.
   /// {@endtemplate}
   final OnErrorFallback onErrorFallback;
 
   /// {@template flutter_math_fork.widgets.math.options}
-  /// Overriding [MathOptions] to build the AST.
+  /// Complete rendering options for the equation.
   ///
-  /// Will overrule [mathStyle] and [textStyle] if not null.
+  /// When provided, these options take precedence over [mathStyle],
+  /// [textStyle], and [logicalPpi].
   /// {@endtemplate}
   final MathOptions? options;
 
   /// {@template flutter_math_fork.widgets.math.parseError}
   /// Errors generated during parsing.
   ///
-  /// If not null, the [onErrorFallback] widget will be presented.
+  /// If non-null, [onErrorFallback] is shown instead of rendering math.
   /// {@endtemplate}
   final ParseException? parseError;
 
-  /// {@macro flutter.widgets.editableText.textScaleFactor}
+  /// Multiplier applied to the effective text size before rendering.
+  ///
+  /// When null, the equation follows the ambient [MediaQuery] text scaling.
   final double? textScaleFactor;
 
-  /// {@template fluttermath.widgets.math.textStyle}
-  /// The style for rendered math analogous to [Text.style].
+  /// {@template flutter_math_fork.widgets.math.textStyle}
+  /// Base text style used to size and color the rendered equation.
   ///
-  /// Can controll the size of the equation via [TextStyle.fontSize]. It can
-  /// also affect the font weight and font shape of the equation.
+  /// [TextStyle.fontSize] controls the overall equation size. Text weight,
+  /// shape, color, and inherited font settings also affect rendering. Text
+  /// inside `\text{...}` uses the same effective style and locale-aware text
+  /// shaping.
   ///
-  /// If set to null, `DefaultTextStyle` from the context will be used.
+  /// If null, [DefaultTextStyle] from the current context is used.
   ///
-  /// Will be overruled if [options] is present.
+  /// Ignored when [options] is provided.
   /// {@endtemplate}
   final TextStyle? textStyle;
 
-  /// Math builder using a TeX string
+  /// Creates a math widget from a TeX [expression].
   ///
   /// {@template flutter_math_fork.widgets.math.tex_builder}
-  /// [expression] will first be parsed under [settings]. Then the acquired
-  /// [SyntaxTree] will be built under a specific options. If [ParseException]
-  /// is thrown or a build error occurs, [onErrorFallback] will be displayed.
+  /// The expression is parsed with [settings] and then rendered using either
+  /// [options] or the simpler [mathStyle] and [textStyle] inputs.
   ///
-  /// You can control the options via [mathStyle] and [textStyle].
+  /// If parsing fails or a render-time build error occurs,
+  /// [onErrorFallback] is displayed.
+  ///
+  /// Example:
+  ///
+  /// ```dart
+  /// Math.tex(
+  ///   r'\text{বাংলা } + x^2 = 25',
+  ///   mathStyle: MathStyle.text,
+  /// )
+  /// ```
   /// {@endtemplate}
   ///
-  /// See alse:
+  /// See also:
   ///
   /// * [Math.mathStyle]
   /// * [Math.textStyle]
@@ -149,7 +165,7 @@ class Math extends StatelessWidget {
       parseError = e;
     } on Object catch (e) {
       parseError = ParseException('Unsanitized parse exception detected: $e.'
-          'Please report this error with correponding input.');
+          'Please report this error with corresponding input.');
     }
     return Math(
       key: key,
@@ -181,17 +197,26 @@ class Math extends StatelessWidget {
             .merge(const TextStyle(fontWeight: FontWeight.bold));
       }
 
-      final textScaleFactor =
-          this.textScaleFactor ?? MediaQuery.textScaleFactorOf(context);
+      final baseFontSize =
+          effectiveTextStyle.fontSize ?? MathOptions.defaultFontSize;
+      final scaledFontSize = this.textScaleFactor != null
+          ? baseFontSize * this.textScaleFactor!
+          : MediaQuery.textScalerOf(context).scale(baseFontSize);
+      final effectiveColor = effectiveTextStyle.color ??
+          DefaultTextStyle.of(context).style.color ??
+          Colors.black;
 
       options = MathOptions(
         style: mathStyle,
-        fontSize: effectiveTextStyle.fontSize! * textScaleFactor,
-        mathFontOptions: effectiveTextStyle.fontWeight != FontWeight.normal && effectiveTextStyle.fontWeight != null
+        fontSize: scaledFontSize,
+        mathFontOptions: effectiveTextStyle.fontWeight != FontWeight.normal &&
+                effectiveTextStyle.fontWeight != null
             ? FontOptions(fontWeight: effectiveTextStyle.fontWeight!)
             : null,
+        textModeTextStyle: effectiveTextStyle,
+        textLocale: Localizations.maybeLocaleOf(context),
         logicalPpi: logicalPpi,
-        color: effectiveTextStyle.color!,
+        color: effectiveColor,
       );
     }
 
@@ -204,7 +229,7 @@ class Math extends StatelessWidget {
     } on Object catch (e) {
       return onErrorFallback(
           BuildException('Unsanitized build exception detected: $e.'
-              'Please report this error with correponding input.'));
+              'Please report this error with corresponding input.'));
     }
 
     return Provider.value(
@@ -213,7 +238,7 @@ class Math extends StatelessWidget {
     );
   }
 
-  /// Default fallback function for [Math], [SelectableMath]
+  /// Default fallback used by [Math] and [SelectableMath].
   static Widget defaultOnErrorFallback(FlutterMathException error) =>
       SelectableText(error.messageWithType);
 

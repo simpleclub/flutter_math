@@ -238,7 +238,7 @@ class RenderEqnArray extends RenderBox
           Paint()..strokeWidth = ruleThickness,
         );
       }
-      // TODO dashed line
+      // dashed line
     }
   }
 }

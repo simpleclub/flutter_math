@@ -1,0 +1,8 @@
+# Generated local build and test artifacts.
+/build/
+/test/failures/
+/test/golden/temp/
+
+# Local example artifacts that should not ship with the package.
+/example/pubspec.lock
+/example/ios/Flutter/ephemeral/

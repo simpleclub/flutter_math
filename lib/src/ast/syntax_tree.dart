@@ -16,7 +16,9 @@ import '../widgets/controller.dart';
 import '../widgets/mode.dart';
 import '../widgets/selectable.dart';
 import 'nodes/space.dart';
+import 'nodes/symbol.dart';
 import 'nodes/sqrt.dart';
+import 'nodes/text_run.dart';
 import 'options.dart';
 import 'spacing.dart';
 import 'types.dart';
@@ -218,9 +220,9 @@ abstract class GreenNode {
   /// [children] stores structural information of the Red-Green Tree.
   /// Used for green tree updates. The order of children should strictly
   /// adheres to the cursor-visiting order in editing mode, in order to get a
-  /// correct cursor range in the editing mode. E.g., for [SqrtNode], when
-  /// moving cursor from left to right, the cursor first enters index, then
-  /// base, so it should return [index, base].
+  /// correct cursor range in the editing mode. For example, for [SqrtNode],
+  /// when moving cursor from left to right, the cursor first enters the index,
+  /// then the base, so it should return `index` before `base`.
   ///
   /// Please ensure [children] works in the same order as [updateChildren],
   /// [computeChildOptions], and [buildWidget].
@@ -487,8 +489,16 @@ class EquationRowNode extends ParentableNode<GreenNode>
     final flattenedBuildResults = childBuildResults
         .expand((result) => result!.results ?? [result])
         .toList(growable: false);
-    final flattenedChildOptions =
-        flattenedBuildResults.map((e) => e.options).toList(growable: false);
+    final renderedChildren = _collapseTextRunsForRendering(
+      flattenedChildList,
+      flattenedBuildResults,
+    );
+    final renderedNodes =
+        renderedChildren.map((entry) => entry.node).toList(growable: false);
+    final renderedBuildResults =
+        renderedChildren.map((entry) => entry.result).toList(growable: false);
+    final renderedChildOptions =
+        renderedBuildResults.map((e) => e.options).toList(growable: false);
     // assert(flattenedChildList.length == actualChildWidgets.length);
 
     // We need to calculate spacings between nodes
@@ -498,11 +508,11 @@ class EquationRowNode extends ParentableNode<GreenNode>
     // - There could aligners and spacers. We need to calculate the spacing
     //   after filtering them out, hence the [traverseNonSpaceNodes]
     final childSpacingConfs = List.generate(
-      flattenedChildList.length,
+      renderedNodes.length,
       (index) {
-        final e = flattenedChildList[index];
+        final e = renderedNodes[index];
         return _NodeSpacingConf(
-            e.leftType, e.rightType, flattenedChildOptions[index], 0.0);
+            e.leftType, e.rightType, renderedChildOptions[index], 0.0);
       },
       growable: false,
     );
@@ -547,12 +557,12 @@ class EquationRowNode extends ParentableNode<GreenNode>
     _key = GlobalKey();
 
     final lineChildren = List.generate(
-      flattenedBuildResults.length,
+      renderedBuildResults.length,
       (index) => LineElement(
-        child: flattenedBuildResults[index].widget,
-        canBreakBefore: false, // TODO
-        alignerOrSpacer: flattenedChildList[index] is SpaceNode &&
-            (flattenedChildList[index] as SpaceNode).alignerOrSpacer,
+        child: renderedBuildResults[index].widget,
+        canBreakBefore: false,
+        alignerOrSpacer: renderedNodes[index] is SpaceNode &&
+            (renderedNodes[index] as SpaceNode).alignerOrSpacer,
         trailingMargin: childSpacingConfs[index].spacingAfter,
       ),
       growable: false,
@@ -813,7 +823,6 @@ enum AtomType {
   inner,
 
   spacing, // symbols
-
 }
 
 /// Only for improvisional use during parsing. Do not use.
@@ -858,6 +867,118 @@ class BuildResult {
   });
 }
 
+List<_RenderedNodeResult> _collapseTextRunsForRendering(
+  List<GreenNode> nodes,
+  List<BuildResult> buildResults,
+) {
+  assert(nodes.length == buildResults.length);
+
+  final collapsed = <_RenderedNodeResult>[];
+  final currentRun = <_RenderedNodeResult>[];
+  var currentRunHasComplexShaping = false;
+
+  void flushCurrentRun() {
+    if (currentRun.isEmpty) {
+      return;
+    }
+
+    if (currentRun.length > 1 && currentRunHasComplexShaping) {
+      final firstNode = currentRun.first.node as SymbolNode;
+      final lastNode = currentRun.last.node;
+      final text = StringBuffer();
+      for (final entry in currentRun) {
+        text.write((entry.node as SymbolNode).symbol);
+      }
+      final textRunNode = TextRunNode(
+        text: text.toString(),
+        overrideFont: firstNode.overrideFont,
+        leftType: firstNode.leftType,
+        rightType: lastNode.rightType,
+      );
+      collapsed.add(
+        _RenderedNodeResult(
+          textRunNode,
+          textRunNode.buildWidget(currentRun.first.result.options, const []),
+        ),
+      );
+    } else {
+      collapsed.addAll(currentRun);
+    }
+    currentRun.clear();
+    currentRunHasComplexShaping = false;
+  }
+
+  for (var index = 0; index < nodes.length; index++) {
+    final entry = _RenderedNodeResult(nodes[index], buildResults[index]);
+    if (_canCollapseIntoTextRun(entry, currentRun)) {
+      currentRun.add(entry);
+      currentRunHasComplexShaping = currentRunHasComplexShaping ||
+          _symbolUsesComplexShaping((entry.node as SymbolNode).symbol);
+      continue;
+    }
+
+    flushCurrentRun();
+    if (_isTextRunCandidate(entry)) {
+      currentRun.add(entry);
+      currentRunHasComplexShaping =
+          _symbolUsesComplexShaping((entry.node as SymbolNode).symbol);
+    } else {
+      collapsed.add(entry);
+    }
+  }
+
+  flushCurrentRun();
+  return collapsed;
+}
+
+bool _canCollapseIntoTextRun(
+  _RenderedNodeResult entry,
+  List<_RenderedNodeResult> currentRun,
+) {
+  if (!_isTextRunCandidate(entry)) {
+    return false;
+  }
+  final node = entry.node as SymbolNode;
+
+  if (currentRun.isEmpty) {
+    return true;
+  }
+
+  final firstNode = currentRun.first.node as SymbolNode;
+  return firstNode.overrideFont == node.overrideFont &&
+      firstNode.overrideAtomType == node.overrideAtomType &&
+      _sameTextRunStyle(currentRun.first.result.options, entry.result.options);
+}
+
+bool _sameTextRunStyle(MathOptions left, MathOptions right) =>
+    left.color == right.color &&
+    left.sizeMultiplier == right.sizeMultiplier &&
+    left.textFontOptions == right.textFontOptions &&
+    left.textModeTextStyle == right.textModeTextStyle &&
+    left.textLocale == right.textLocale;
+
+bool _isTextRunCandidate(_RenderedNodeResult entry) {
+  final node = entry.node;
+  return node is SymbolNode && node.mode == Mode.text && !node.variantForm;
+}
+
+bool _symbolUsesComplexShaping(String text) => text.runes.any(
+      _isComplexShapingCodepoint,
+    );
+
+bool _isComplexShapingCodepoint(int codepoint) =>
+    _isBrahmicCodepoint(codepoint) || _isArabicCodepoint(codepoint);
+
+bool _isBrahmicCodepoint(int codepoint) =>
+    codepoint >= 0x0900 && codepoint <= 0x109F;
+
+bool _isArabicCodepoint(int codepoint) =>
+    (codepoint >= 0x0600 && codepoint <= 0x06FF) ||
+    (codepoint >= 0x0750 && codepoint <= 0x077F) ||
+    (codepoint >= 0x08A0 && codepoint <= 0x08FF) ||
+    (codepoint >= 0xFB50 && codepoint <= 0xFDFF) ||
+    (codepoint >= 0xFE70 && codepoint <= 0xFEFF);
+
 void _traverseNonSpaceNodes(
   List<_NodeSpacingConf> childTypeList,
   void Function(_NodeSpacingConf? prev, _NodeSpacingConf? curr) callback,
@@ -888,4 +1009,11 @@ class _NodeSpacingConf {
     this.options,
     this.spacingAfter,
   );
+}
+
+class _RenderedNodeResult {
+  final GreenNode node;
+  final BuildResult result;
+
+  const _RenderedNodeResult(this.node, this.result);
 }

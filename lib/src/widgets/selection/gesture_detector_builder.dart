@@ -7,6 +7,8 @@ abstract class MathSelectionGestureDetectorBuilderDelegate {
   bool get forcePressEnabled;
 
   bool get selectionEnabled;
+
+  void requestFocusForInteraction();
 }
 
 class MathSelectionGestureDetectorBuilder {
@@ -30,6 +32,9 @@ class MathSelectionGestureDetectorBuilder {
   @protected
   void onTapDown(TapDragDownDetails details) {
     lastTapDownPosition = details.globalPosition;
+    if (delegate.selectionEnabled) {
+      delegate.requestFocusForInteraction();
+    }
     // The selection overlay should only be shown when the user is interacting
     // through a touch screen (via either a finger or a stylus). A mouse
     // shouldn't trigger the selection overlay.

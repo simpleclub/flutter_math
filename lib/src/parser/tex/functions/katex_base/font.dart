@@ -62,7 +62,6 @@ GreenNode _fontHandler(TexParser parser, FunctionContext context) {
 
 GreenNode _boldSymbolHandler(TexParser parser, FunctionContext context) {
   final body = parser.parseArgNode(mode: null, optional: false)!;
-  // TODO
   // amsbsy.sty's \boldsymbol uses \binrel spacing to inherit the
   // argument's bin|rel|ord status
   return StyleNode(

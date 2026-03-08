@@ -37,6 +37,9 @@ coverage
 .pub/
 build/
 pubspec.lock
+!example/pubspec.lock
+/test/failures/
+/test/golden/temp/
 
 # Android related
 **/android/**/gradle-wrapper.jar
@@ -72,6 +75,7 @@ pubspec.lock
 **/ios/Flutter/app.zip
 **/ios/Flutter/flutter_assets/
 **/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/ephemeral/
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
 

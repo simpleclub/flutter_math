@@ -128,6 +128,14 @@ mixin WebSelectionControlsManagerMixin<T extends StatefulWidget>
   }
 
   @override
+  void didChangeInputControl(
+    TextInputControl? oldControl,
+    TextInputControl? newControl,
+  ) {
+    // no-op
+  }
+
+  @override
   AutofillScope? get currentAutofillScope => null;
 
   @override
@@ -140,6 +148,26 @@ mixin WebSelectionControlsManagerMixin<T extends StatefulWidget>
 
   @override
   void performPrivateCommand(String action, Map<String, dynamic> data) {
+    // no-op
+  }
+
+  @override
+  void insertContent(KeyboardInsertedContent content) {
+    // no-op
+  }
+
+  @override
+  void insertTextPlaceholder(Size size) {
+    // no-op
+  }
+
+  @override
+  void removeTextPlaceholder() {
+    // no-op
+  }
+
+  @override
+  void performSelector(String selectorName) {
     // no-op
   }
 

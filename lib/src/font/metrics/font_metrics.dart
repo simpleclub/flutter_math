@@ -209,7 +209,7 @@ CharacterMetrics? getCharacterMetrics(
 
   final extraCh = extraCharacterMap[character[0]]?.codeUnitAt(0);
   if (extraCh != null) {
-    return metricsMapFont[ch];
+    return metricsMapFont[extraCh];
   }
   if (mode == Mode.text && supportedCodepoint(ch)) {
     // We don't typically have font metrics for Asian scripts.
@@ -241,7 +241,5 @@ FontMetrics getGlobalMetrics(MathSize size) {
     case MathSize.huge:
     case MathSize.HUGE:
       return textFontMetrics;
-    default:
-      throw ArgumentError(size);
   }
 }

@@ -16,6 +16,8 @@ mixin SelectionOverlayManagerMixin<T extends StatefulWidget>
 
   double get preferredLineHeight;
 
+  List<ContextMenuButtonItem> get contextMenuButtonItems;
+
   TextSelectionControls get textSelectionControls;
 
   DragStartBehavior get dragStartBehavior;
@@ -73,6 +75,9 @@ mixin SelectionOverlayManagerMixin<T extends StatefulWidget>
     }
 
     if (controller.selection.isCollapsed) {
+      return false;
+    }
+    if (contextMenuButtonItems.isEmpty) {
       return false;
     }
     _selectionOverlay!.showToolbar();
