@@ -88,7 +88,7 @@ GreenNode _cancelHandler(TexParser parser, FunctionContext context) {
     notation: const {
       '\\cancel': ['updiagonalstrike'],
       '\\bcancel': ['downdiagonalstrike'],
-      '\\xcancel': ['updiagonalstrike, downdiagonalstrike'],
+      '\\xcancel': ['updiagonalstrike', 'downdiagonalstrike'],
       '\\sout': ['horizontalstrike'],
     }[context.funcName]!,
     hasBorder: false,
