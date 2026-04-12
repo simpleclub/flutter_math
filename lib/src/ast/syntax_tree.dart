@@ -89,8 +89,9 @@ class SyntaxTree {
         nullableChildren.add(null);
         hasNulls = true;
       } else if (identical(child, pos)) {
+        // newNode has static type GreenNode (non-null), so no need to set
+        // hasNulls here; the cast validates the element type.
         nullableChildren.add(newNode as EquationRowNode?);
-        if (newNode == null) hasNulls = true;
       } else {
         nullableChildren.add(child.value as EquationRowNode);
       }

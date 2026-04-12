@@ -456,6 +456,12 @@ class InternalSelectableMathState extends State<InternalSelectableMath>
   @override
   void didUpdateWidget(InternalSelectableMath oldWidget) {
     if (widget.controller != oldWidget.controller) {
+      // Dispose the previously-owned controller before swapping, otherwise
+      // the instance created in initState (or the last didUpdateWidget)
+      // leaks its listeners and internal state.
+      if (_ownsController) {
+        controller.dispose();
+      }
       if (widget.controller != null) {
         controller = widget.controller!;
         _ownsController = false;
