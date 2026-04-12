@@ -53,10 +53,53 @@ class SyntaxTree {
           'The replaced node is not the root of this tree but has no parent');
     }
     return replaceNode(
-        posParent,
-        posParent.value.updateChildren(posParent.children
-            .map((child) => identical(child, pos) ? newNode : child?.value)
-            .toList(growable: false)));
+        posParent, _rebuildParent(posParent, pos, newNode));
+  }
+
+  /// Build a new green node equivalent to [posParent].value but with [pos]'s
+  /// green node replaced by [newNode]. Dispatches on the concrete parent type
+  /// because every subclass of [GreenNode] narrows the type of the list
+  /// argument passed to [updateChildren]:
+  ///   - [EquationRowNode]   → List<GreenNode>         (non-null)
+  ///   - [FracNode] & friends → List<EquationRowNode>   (typed, non-null)
+  ///   - [MultiscriptsNode] & friends → List<EquationRowNode?> (nullable)
+  ///
+  /// A naive `posParent.value.updateChildren(children.map(...).toList())`
+  /// builds a `List<GreenNode?>` which fails every covariant check at runtime.
+  /// We materialise the correctly-typed list here instead.
+  static GreenNode _rebuildParent(
+      SyntaxNode posParent, SyntaxNode pos, GreenNode newNode) {
+    final parentValue = posParent.value;
+    final rawChildren = posParent.children;
+
+    if (parentValue is EquationRowNode) {
+      final newChildren = <GreenNode>[
+        for (final child in rawChildren)
+          identical(child, pos) ? newNode : child!.value,
+      ];
+      return parentValue.updateChildren(newChildren);
+    }
+
+    // Every other non-leaf parent type expects EquationRowNode children
+    // (either nullable or non-nullable). Build the correctly-typed list.
+    final nullableChildren = <EquationRowNode?>[];
+    var hasNulls = false;
+    for (final child in rawChildren) {
+      if (child == null) {
+        nullableChildren.add(null);
+        hasNulls = true;
+      } else if (identical(child, pos)) {
+        nullableChildren.add(newNode as EquationRowNode?);
+        if (newNode == null) hasNulls = true;
+      } else {
+        nullableChildren.add(child.value as EquationRowNode);
+      }
+    }
+    if (!hasNulls) {
+      return parentValue
+          .updateChildren(nullableChildren.cast<EquationRowNode>());
+    }
+    return parentValue.updateChildren(nullableChildren);
   }
 
   List<SyntaxNode> findNodesAtPosition(int position) {
