@@ -65,7 +65,7 @@ class SqrtNode extends SlotableNode {
             // so 'SelectionManagerMixin.getRenderLineAtOffset' can find
             // render lines in the base widget
             child: IgnorePointer(
-              child: LayoutBuilderPreserveBaseline(
+              child: LayoutBuilder(
                 builder: (context, constraints) => sqrtSvg(
                   minDelimiterHeight: constraints.minHeight,
                   baseWidth: constraints.minWidth,
@@ -136,6 +136,7 @@ enum _SqrtPos {
 class SqrtLayoutDelegate extends CustomLayoutDelegate<_SqrtPos> {
   final MathOptions options;
   final MathOptions baseOptions;
+
   // final MathOptions indexOptions;
 
   SqrtLayoutDelegate({
@@ -143,6 +144,7 @@ class SqrtLayoutDelegate extends CustomLayoutDelegate<_SqrtPos> {
     required this.baseOptions,
     // required this.indexOptions,
   });
+
   var heightAboveBaseline = 0.0;
   var svgHorizontalPos = 0.0;
   var svgVerticalPos = 0.0;

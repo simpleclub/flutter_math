@@ -51,6 +51,9 @@ class LeftRightNode extends SlotableNode<EquationRowNode> {
         // Delimiter
         return LineElement(
           customCrossSize: (height, depth) {
+            if (!height.isFinite || !depth.isFinite) {
+              return const BoxConstraints(minHeight: 20.0);
+            }
             final delta = math.max(height - a, depth + a);
             final delimeterFullHeight = math.max(delta / 500 * delimiterFactor,
                 2 * delta - delimiterShorfall.toLpUnder(options));
@@ -61,7 +64,7 @@ class LeftRightNode extends SlotableNode<EquationRowNode> {
               : getSpacingSize(index == 0 ? AtomType.open : AtomType.rel,
                       body[(index + 1) ~/ 2].leftType, options.style)
                   .toLpUnder(options),
-          child: LayoutBuilderPreserveBaseline(
+          child: LayoutBuilder(
             builder: (context, constraints) => buildCustomSizedDelimWidget(
               index == 0
                   ? leftDelim

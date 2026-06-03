@@ -19,6 +19,8 @@ class LineParentData extends ContainerBoxParentData<RenderBox> {
 
   bool alignerOrSpacer = false;
 
+  late BoxConstraints constraints;
+
   @override
   String toString() =>
       '${super.toString()}; canBreakBefore = $canBreakBefore; customSize = ${customCrossSize != null}; trailingMargin = $trailingMargin; alignerOrSpacer = $alignerOrSpacer';
@@ -340,7 +342,7 @@ class RenderLine extends RenderBox
       } else if (childParentData.alignerOrSpacer) {
         alignerAndSpacers.add(child);
       } else {
-        final childSize = child.getLayoutSize(infiniteConstraint, dry: dry);
+        final childSize = child.getLayoutSize(constraints.loosen(), dry: dry);
         sizeMap[child] = childSize;
         final distance = dry ? 0.0 : child.getDistanceToBaseline(textBaseline)!;
         maxHeightAboveBaseline = math.max(maxHeightAboveBaseline, distance);
