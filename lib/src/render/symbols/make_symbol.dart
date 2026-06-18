@@ -1,4 +1,3 @@
-
 import 'package:flutter/widgets.dart';
 
 import '../../ast/options.dart';
@@ -10,6 +9,7 @@ import '../../ast/syntax_tree.dart';
 import '../../ast/types.dart';
 import '../../font/metrics/font_metrics.dart';
 import '../layout/reset_dimension.dart';
+import '../utils/alignment_utils.dart';
 import 'make_composite.dart';
 
 BuildResult makeBaseSymbol({
@@ -61,7 +61,7 @@ BuildResult makeBaseSymbol({
             italic: italic,
             skew: charMetrics.skew.cssEm.toLpUnder(options),
             widget: makeChar(symbol, font, charMetrics, options,
-                needItalic: mode == Mode.math),
+                needItalic: mode == Mode.math, atomType: atomType),
           );
         } else if (ligatures.containsKey(symbol) &&
             font.fontFamily == 'Typewriter') {
@@ -73,8 +73,8 @@ BuildResult makeBaseSymbol({
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: expandedText
-                  .map((e) =>
-                      makeChar(e, font!, lookupChar(e, font, mode), options))
+                  .map((e) => makeChar(e, font!, lookupChar(e, font, mode),
+                      options, atomType: atomType))
                   .toList(growable: false),
             ),
             italic: 0.0,
@@ -97,7 +97,7 @@ BuildResult makeBaseSymbol({
     return BuildResult(
       options: options,
       widget: makeChar(char, defaultFont, characterMetrics, options,
-          needItalic: mode == Mode.math),
+          needItalic: mode == Mode.math, atomType: atomType),
       italic: italic,
       skew: characterMetrics?.skew.cssEm.toLpUnder(options) ?? 0.0,
     );
@@ -123,16 +123,67 @@ BuildResult makeBaseSymbol({
     italic: 0.0,
     skew: 0.0,
     widget: makeChar(symbol, const FontOptions(), null, options,
-        needItalic: mode == Mode.math),
+        needItalic: mode == Mode.math, atomType: atomType),
   );
 }
 
-Widget makeChar(String character, FontOptions font,
-    CharacterMetrics? characterMetrics, MathOptions options,
-    {bool needItalic = false}) {
+Widget makeChar(
+  String character,
+  FontOptions font,
+  CharacterMetrics? characterMetrics,
+  MathOptions options, {
+  bool needItalic = false,
+  AtomType? atomType,
+}) {
+  // Calculate vertical offset for visual centering
+  double verticalOffset = 0.0;
+
+  if (options.centerOperators &&
+      characterMetrics != null &&
+      atomType != null) {
+    final height = characterMetrics.height;
+    final depth = characterMetrics.depth;
+
+    // Centering rules:
+    // 1. Numbers: Always at baseline (tall, serve as reference)
+    // 2. Operators (+, -, =, etc.): Always centered at math axis
+    // 3. Variables (x, y, a, b):
+    //    - If adjacent to number (like "3x"): at baseline (forceVariableBaseline=true)
+    //    - If standalone (like "x" in "3 + 5 = x"): centered
+    //    - If with other variables (like "xy"): centered
+    //
+    // This makes expressions look balanced while keeping "3x" style
+    // coefficients properly aligned.
+    
+    final isOperator = atomType == AtomType.bin || atomType == AtomType.rel;
+    final isVariable = atomType == AtomType.ord && 
+        AlignmentConstants.shouldApplyCentering(height);
+    
+    // Center operators always, and center variables unless forced to baseline
+    final shouldCenter = AlignmentConstants.shouldApplyCentering(height) &&
+        (isOperator || (isVariable && !options.forceVariableBaseline));
+
+    if (shouldCenter) {
+      // Calculate offset in em units, then convert to logical pixels
+      final offsetEm = AlignmentConstants.calculateAlignmentOffset(
+        charHeight: height,
+        charDepth: depth,
+      );
+      verticalOffset = offsetEm.cssEm.toLpUnder(options);
+    }
+  }
+
+  // When centering is applied, report the number height as the baseline
+  // so that all characters in a line contribute the same baseline,
+  // ensuring consistent alignment between formulas in Quill.
+  final reportedHeight = (verticalOffset != 0.0)
+      ? AlignmentConstants.numberHeight.cssEm.toLpUnder(options)
+      : characterMetrics?.height.cssEm.toLpUnder(options);
+
   final charWidget = ResetDimension(
-    height: characterMetrics?.height.cssEm.toLpUnder(options),
+    height: reportedHeight,
     depth: characterMetrics?.depth.cssEm.toLpUnder(options),
+    verticalOffset: verticalOffset,
     child: RichText(
       text: TextSpan(
         text: character,

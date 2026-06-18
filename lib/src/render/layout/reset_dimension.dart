@@ -8,6 +8,7 @@ class ResetDimension extends SingleChildRenderObjectWidget {
   final double? height;
   final double? depth;
   final double? width;
+  final double verticalOffset;
   final CrossAxisAlignment horizontalAlignment;
 
   const ResetDimension({
@@ -15,6 +16,7 @@ class ResetDimension extends SingleChildRenderObjectWidget {
     this.height,
     this.depth,
     this.width,
+    this.verticalOffset = 0.0,
     this.horizontalAlignment = CrossAxisAlignment.center,
     required Widget child,
   }) : super(key: key, child: child);
@@ -25,6 +27,7 @@ class ResetDimension extends SingleChildRenderObjectWidget {
         layoutHeight: height,
         layoutWidth: width,
         layoutDepth: depth,
+        verticalOffset: verticalOffset,
         horizontalAlignment: horizontalAlignment,
       );
 
@@ -35,6 +38,7 @@ class ResetDimension extends SingleChildRenderObjectWidget {
         ..layoutHeight = height
         ..layoutDepth = depth
         ..layoutWidth = width
+        ..verticalOffset = verticalOffset
         ..horizontalAlignment = horizontalAlignment;
 }
 
@@ -44,10 +48,12 @@ class RenderResetDimension extends RenderShiftedBox {
     double? layoutHeight,
     double? layoutDepth,
     double? layoutWidth,
+    double verticalOffset = 0.0,
     CrossAxisAlignment horizontalAlignment = CrossAxisAlignment.center,
   })  : _layoutHeight = layoutHeight,
         _layoutDepth = layoutDepth,
         _layoutWidth = layoutWidth,
+        _verticalOffset = verticalOffset,
         _horizontalAlignment = horizontalAlignment,
         super(child);
 
@@ -74,6 +80,15 @@ class RenderResetDimension extends RenderShiftedBox {
   set layoutWidth(double? value) {
     if (_layoutWidth != value) {
       _layoutWidth = value;
+      markNeedsLayout();
+    }
+  }
+
+  double get verticalOffset => _verticalOffset;
+  double _verticalOffset;
+  set verticalOffset(double value) {
+    if (_verticalOffset != value) {
+      _verticalOffset = value;
       markNeedsLayout();
     }
   }
@@ -162,7 +177,9 @@ class RenderResetDimension extends RenderShiftedBox {
     }
 
     if (!dry) {
-      child.offset = Offset(dx, height - childHeight);
+      // Apply vertical offset after baseline alignment
+      // Negative offset shifts up, positive shifts down
+      child.offset = Offset(dx, height - childHeight - verticalOffset);
     }
 
     return Size(width, height + depth);

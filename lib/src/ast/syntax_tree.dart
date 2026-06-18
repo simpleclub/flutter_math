@@ -17,6 +17,7 @@ import '../widgets/mode.dart';
 import '../widgets/selectable.dart';
 import 'nodes/space.dart';
 import 'nodes/sqrt.dart';
+import 'nodes/symbol.dart';
 import 'options.dart';
 import 'spacing.dart';
 import 'types.dart';
@@ -646,8 +647,69 @@ class EquationRowNode extends ParentableNode<GreenNode>
   }
 
   @override
-  List<MathOptions> computeChildOptions(MathOptions options) =>
-      List.filled(children.length, options, growable: false);
+  List<MathOptions> computeChildOptions(MathOptions options) {
+    // Check each child to determine if it's a variable adjacent to a number.
+    // Variables adjacent to numbers (like "3x") should stay at baseline.
+    // Variables not adjacent to numbers should be centered.
+    return List.generate(children.length, (index) {
+      final child = children[index];
+      
+      // Only process SymbolNode children
+      if (child is! SymbolNode) {
+        return options;
+      }
+      
+      // Check if this is an ordinary character (variable/number)
+      if (child.atomType != AtomType.ord) {
+        return options;
+      }
+      
+      // Check if this is a digit (numbers always stay at baseline)
+      final symbol = child.symbol;
+      if (_isDigit(symbol)) {
+        return options;
+      }
+      
+      // This is a variable (letter). Check if it's adjacent to a number.
+      final isAdjacentToNumber = _isAdjacentToNumber(index);
+      
+      if (isAdjacentToNumber) {
+        // Variable is adjacent to number - force baseline
+        return options.copyWith(forceVariableBaseline: true);
+      }
+      
+      // Variable is not adjacent to number - will be centered
+      return options;
+    }, growable: false);
+  }
+  
+  /// Check if character at index is adjacent to a number (no operator between)
+  bool _isAdjacentToNumber(int index) {
+    // Check previous sibling
+    if (index > 0) {
+      final prev = children[index - 1];
+      if (prev is SymbolNode && _isDigit(prev.symbol)) {
+        return true;
+      }
+    }
+    
+    // Check next sibling
+    if (index < children.length - 1) {
+      final next = children[index + 1];
+      if (next is SymbolNode && _isDigit(next.symbol)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  /// Check if a symbol is a digit (0-9)
+  static bool _isDigit(String symbol) {
+    if (symbol.isEmpty) return false;
+    final code = symbol.codeUnitAt(0);
+    return code >= 0x30 && code <= 0x39; // '0' to '9'
+  }
 
   @override
   bool shouldRebuildWidget(MathOptions oldOptions, MathOptions newOptions) =>

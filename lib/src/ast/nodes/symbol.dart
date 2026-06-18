@@ -103,7 +103,9 @@ class SymbolNode extends LeafNode {
       oldOptions.color != newOptions.color ||
       oldOptions.mathFontOptions != newOptions.mathFontOptions ||
       oldOptions.textFontOptions != newOptions.textFontOptions ||
-      oldOptions.sizeMultiplier != newOptions.sizeMultiplier;
+      oldOptions.sizeMultiplier != newOptions.sizeMultiplier ||
+      oldOptions.centerOperators != newOptions.centerOperators ||
+      oldOptions.forceVariableBaseline != newOptions.forceVariableBaseline;
 
   @override
   AtomType get leftType => atomType;

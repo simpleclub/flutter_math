@@ -70,6 +70,16 @@ class MathOptions {
   /// {@endtemplate}
   final double logicalPpi;
 
+  /// Whether to vertically center binary operators and relations relative to
+  /// numbers. When true, operators like +, -, =, <, > will be visually centered
+  /// with the middle of numbers instead of sitting at the baseline.
+  final bool centerOperators;
+
+  /// When true, forces variables to stay at the baseline (not centered).
+  /// This is used for variables adjacent to numbers like "3x" where x should
+  /// share the baseline with 3.
+  final bool forceVariableBaseline;
+
   MathOptions._({
     required this.fontSize,
     required this.logicalPpi,
@@ -78,6 +88,8 @@ class MathOptions {
     this.sizeUnderTextStyle = MathSize.normalsize,
     this.textFontOptions,
     this.mathFontOptions,
+    this.centerOperators = false,
+    this.forceVariableBaseline = false,
     // required this.maxSize,
     // required this.minRuleThickness,
   });
@@ -97,6 +109,7 @@ class MathOptions {
     FontOptions? mathFontOptions,
     double? fontSize,
     double? logicalPpi,
+    bool centerOperators = false,
     // required this.maxSize,
     // required this.minRuleThickness,
   }) {
@@ -114,6 +127,7 @@ class MathOptions {
       sizeUnderTextStyle: sizeUnderTextStyle,
       mathFontOptions: mathFontOptions,
       textFontOptions: textFontOptions,
+      centerOperators: centerOperators,
     );
   }
 
@@ -233,6 +247,8 @@ class MathOptions {
     MathSize? sizeUnderTextStyle,
     FontOptions? textFontOptions,
     FontOptions? mathFontOptions,
+    bool? centerOperators,
+    bool? forceVariableBaseline,
     // double maxSize,
     // num minRuleThickness,
   }) =>
@@ -244,6 +260,8 @@ class MathOptions {
         sizeUnderTextStyle: sizeUnderTextStyle ?? this.sizeUnderTextStyle,
         textFontOptions: textFontOptions ?? this.textFontOptions,
         mathFontOptions: mathFontOptions ?? this.mathFontOptions,
+        centerOperators: centerOperators ?? this.centerOperators,
+        forceVariableBaseline: forceVariableBaseline ?? this.forceVariableBaseline,
         // maxSize: maxSize ?? this.maxSize,
         // minRuleThickness: minRuleThickness ?? this.minRuleThickness,
       );
