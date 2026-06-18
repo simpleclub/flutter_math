@@ -308,6 +308,23 @@ class RenderEditableLine extends RenderLine {
 
   double preferredLineHeight;
 
+  /// Effective baseline used for cursor positioning and for reporting
+  /// this row's distance-to-baseline to ancestors (e.g. [Baseline]
+  /// widgets). Empty rows have no natural baseline (no children →
+  /// `maxHeightAboveBaseline` is 0), so we fall back to ~80% of
+  /// [preferredLineHeight] — roughly where a typical font's alphabetic
+  /// baseline sits. This keeps the caret stable across empty↔non-empty
+  /// transitions when the row is inside a [Baseline] widget.
+  double get _effectiveBaselineY => maxHeightAboveBaseline > 0
+      ? maxHeightAboveBaseline
+      : preferredLineHeight * 0.8;
+
+  @override
+  double computeDistanceToActualBaseline(TextBaseline baseline) {
+    assert(!debugNeedsLayout);
+    return _effectiveBaselineY;
+  }
+
   TextSelection get selection => _selection;
   TextSelection _selection;
   set selection(TextSelection value) {
@@ -447,7 +464,13 @@ class RenderEditableLine extends RenderLine {
 
     if (showCursor && _selection.isCollapsed && isSelectionInRange) {
       final cursorOffset = caretOffsets[selection.baseOffset];
-      _paintCaret(context.canvas, Offset(cursorOffset, size.height) + offset);
+      // Anchor the caret at the alphabetic baseline (reported via
+      // [computeDistanceToActualBaseline]), not the bottom of the render
+      // box. For rows containing superscripts / fractions, size.height is
+      // much greater than the baseline, and using it pushes the caret
+      // visually below the main text.
+      _paintCaret(
+          context.canvas, Offset(cursorOffset, _effectiveBaselineY) + offset);
     }
 
     if (!_paintCursorAboveText) {

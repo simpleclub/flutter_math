@@ -41,6 +41,7 @@ class SelectableMath extends StatelessWidget {
   const SelectableMath({
     Key? key,
     this.ast,
+    this.controller,
     this.autofocus = false,
     this.cursorColor,
     this.cursorRadius,
@@ -71,6 +72,12 @@ class SelectableMath extends StatelessWidget {
   ///
   /// It can be null only when [parseException] is not null.
   final SyntaxTree? ast;
+
+  /// Optional externally-owned [MathController]. When non-null, the widget
+  /// uses this controller instead of creating its own. Lets callers drive
+  /// the selection (cursor position) from outside — required for editable
+  /// math widgets that mutate the tree at the cursor.
+  final MathController? controller;
 
   /// {@macro flutter.widgets.editableText.autofocus}
   final bool autofocus;
@@ -308,6 +315,7 @@ class SelectableMath extends StatelessWidget {
     return RepaintBoundary(
       child: InternalSelectableMath(
         ast: ast!,
+        controller: controller,
         autofocus: autofocus,
         cursorColor: cursorColor,
         cursorOffset: cursorOffset,
@@ -339,6 +347,7 @@ class InternalSelectableMath extends StatefulWidget {
   const InternalSelectableMath({
     Key? key,
     required this.ast,
+    this.controller,
     this.autofocus = false,
     required this.cursorColor,
     this.cursorOffset,
@@ -360,6 +369,9 @@ class InternalSelectableMath extends StatefulWidget {
   }) : super(key: key);
 
   final SyntaxTree ast;
+
+  /// Optional externally-owned [MathController]. See [SelectableMath.controller].
+  final MathController? controller;
 
   final bool autofocus;
 
@@ -424,20 +436,44 @@ class InternalSelectableMathState extends State<InternalSelectableMath>
   DragStartBehavior get dragStartBehavior => widget.dragStartBehavior;
 
   late MathController controller;
+  bool _ownsController = true;
 
   late FocusNode _oldFocusNode;
 
   @override
   void initState() {
-    controller = MathController(ast: widget.ast);
+    if (widget.controller != null) {
+      controller = widget.controller!;
+      _ownsController = false;
+    } else {
+      controller = MathController(ast: widget.ast);
+      _ownsController = true;
+    }
     _oldFocusNode = focusNode..addListener(updateKeepAlive);
     super.initState();
   }
 
   @override
   void didUpdateWidget(InternalSelectableMath oldWidget) {
-    if (widget.ast != controller.ast) {
-      controller = MathController(ast: widget.ast);
+    if (widget.controller != oldWidget.controller) {
+      // Dispose the previously-owned controller before swapping, otherwise
+      // the instance created in initState (or the last didUpdateWidget)
+      // leaks its listeners and internal state.
+      if (_ownsController) {
+        controller.dispose();
+      }
+      if (widget.controller != null) {
+        controller = widget.controller!;
+        _ownsController = false;
+      } else {
+        controller = MathController(ast: widget.ast);
+        _ownsController = true;
+      }
+    } else if (_ownsController && widget.ast != controller.ast) {
+      // We own the controller — update the ast on the existing instance so
+      // the selection is preserved (via MathController.ast setter, which
+      // now sanitizes the selection against the new tree instead of resetting).
+      controller.ast = widget.ast;
     }
     if (_oldFocusNode != focusNode) {
       _oldFocusNode.removeListener(updateKeepAlive);
@@ -465,7 +501,9 @@ class InternalSelectableMathState extends State<InternalSelectableMath>
   void dispose() {
     _oldFocusNode.removeListener(updateKeepAlive);
     super.dispose();
-    controller.dispose();
+    if (_ownsController) {
+      controller.dispose();
+    }
   }
 
   void onSelectionChanged(
@@ -512,6 +550,7 @@ class InternalSelectableMathState extends State<InternalSelectableMath>
                   cursorHeight: widget.cursorHeight,
                   selectionColor: widget.selectionColor,
                   paintCursorAboveText: widget.paintCursorAboveText,
+                  showCursor: widget.showCursor,
                 ),
               ),
               Provider.value(

@@ -14,7 +14,10 @@ class MathController extends ChangeNotifier {
   set ast(SyntaxTree value) {
     if (_ast != value) {
       _ast = value;
-      _selection = const TextSelection.collapsed(offset: -1);
+      // Preserve the selection across tree mutations, clamped to the new
+      // tree's valid range. Required for editable-math widgets that need
+      // the caret to survive insertions/deletions.
+      _selection = sanitizeSelection(_ast, _selection);
       notifyListeners();
     }
   }
