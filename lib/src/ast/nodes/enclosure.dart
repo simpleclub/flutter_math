@@ -95,7 +95,7 @@ class EnclosureNode extends SlotableNode<EquationRowNode> {
               ),
             ),
           ),
-        if (notation.contains('downdiagnoalstrike'))
+        if (notation.contains('downdiagonalstrike'))
           Positioned(
             left: 0,
             right: 0,
