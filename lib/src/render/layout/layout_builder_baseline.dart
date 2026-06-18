@@ -23,7 +23,6 @@ class LayoutBuilderPreserveBaseline
 class _RenderLayoutBuilderPreserveBaseline extends RenderBox
     with
         RenderObjectWithChildMixin<RenderBox>,
-        RenderObjectWithLayoutCallbackMixin,
         RenderConstrainedLayoutBuilder<BoxConstraints, RenderBox> {
   @override
   double? computeDistanceToActualBaseline(TextBaseline baseline) =>
@@ -60,7 +59,7 @@ class _RenderLayoutBuilderPreserveBaseline extends RenderBox
   @override
   void performLayout() {
     final constraints = this.constraints;
-    runLayoutCallback();
+    rebuildIfNecessary();
     if (child != null) {
       child!.layout(constraints, parentUsesSize: true);
       size = constraints.constrain(child!.size);
