@@ -133,7 +133,13 @@ class MultiscriptsLayoutDelegate extends IntrinsicLayoutDelegate<_ScriptPos> {
     required Map<_ScriptPos, double> childrenWidths,
     bool isComputingIntrinsics = false,
   }) {
-    final baseSize = childrenWidths[_ScriptPos.base]!;
+    // `_ScriptPos.base` can be absent from `childrenWidths` for certain
+    // subscript/superscript expressions during intrinsic-width layout
+    // (e.g. `\mathrm{CL_r = CL_{tot} \times f_e}`), which made the previous
+    // `!` throw a "Null check operator used on a null value" exception and
+    // freeze the whole UI (see issue #1). Fall back to 0 so layout can
+    // continue; this only affects intrinsic-size probing, not final paint.
+    final baseSize = childrenWidths[_ScriptPos.base] ?? 0.0;
     final subSize = childrenWidths[_ScriptPos.sub];
     final supSize = childrenWidths[_ScriptPos.sup];
     final presubSize = childrenWidths[_ScriptPos.presub];
@@ -175,13 +181,15 @@ class MultiscriptsLayoutDelegate extends IntrinsicLayoutDelegate<_ScriptPos> {
     required Map<_ScriptPos, double> childrenBaselines,
     bool isComputingIntrinsics = false,
   }) {
-    final baseSize = childrenHeights[_ScriptPos.base]!;
+    // Same rationale as performHorizontalIntrinsicLayout above: guard
+    // against `_ScriptPos.base` being absent during intrinsic layout.
+    final baseSize = childrenHeights[_ScriptPos.base] ?? 0.0;
     final subSize = childrenHeights[_ScriptPos.sub];
     final supSize = childrenHeights[_ScriptPos.sup];
     final presubSize = childrenHeights[_ScriptPos.presub];
     final presupSize = childrenHeights[_ScriptPos.presup];
 
-    final baseHeight = childrenBaselines[_ScriptPos.base]!;
+    final baseHeight = childrenBaselines[_ScriptPos.base] ?? 0.0;
     final subHeight = childrenBaselines[_ScriptPos.sub];
     final supHeight = childrenBaselines[_ScriptPos.sup];
     final presubHeight = childrenBaselines[_ScriptPos.presub];
