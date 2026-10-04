@@ -1,6 +1,8 @@
 ## 0.7.5
 
-* Require Flutter >=3.32.0, which the 0.7.4 changes depend on (#110)
+* Require Flutter >=3.32.0, which the 0.7.4 changes depend on (#110).
+  0.7.4 also requires Flutter >=3.32.0 but doesn't declare it.
+  On older Flutter versions, pin `flutter_math_fork: 0.7.3`.
 
 ## 0.7.4
 
