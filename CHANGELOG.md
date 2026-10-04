@@ -1,3 +1,7 @@
+## 0.7.5
+
+* Require Flutter >=3.32.0, which the 0.7.4 changes depend on (#110)
+
 ## 0.7.4
 
 * Add support for flutter 3.32.0
