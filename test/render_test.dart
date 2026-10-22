@@ -123,6 +123,16 @@ void main() {
     location: '../doc/img/leftright.png',
   );
 
+  testTexToRender(
+    'Delimiters in a subscript should fit their content',
+    r'x_{\left( \frac{a}{b} \right)}',
+  );
+
+  testTexToRender(
+    'Binomials in a text style fraction should fit their content',
+    r'\textstyle\frac{\binom{a}{b}}{\binom{c}{d}}',
+  );
+
   testTexToMatchGoldenFile(
     'Matrix renderer',
     r'\begin{array}{c|r:}a & b \\c & d\end{array}',

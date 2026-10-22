@@ -13,6 +13,7 @@ import '../../render/symbols/make_symbol.dart';
 import '../options.dart';
 import '../size.dart';
 import '../spacing.dart';
+import '../style.dart';
 import '../syntax_tree.dart';
 import '../types.dart';
 
@@ -192,7 +193,8 @@ Widget buildCustomSizedDelimWidget(
     sequence = stackAlwaysDelimiterSequence;
   }
 
-  var delimConf = sequence.firstWhereOrNull((element) =>
+  final start = math.min(2, 3 - options.style.size);
+  var delimConf = sequence.skip(start).firstWhereOrNull((element) =>
       getHeightForDelim(
         delim: delim,
         fontName: element.font.fontName,
@@ -209,8 +211,11 @@ Widget buildCustomSizedDelimWidget(
     return ShiftBaseline(
       relativePos: 0.5,
       offset: axisHeight,
-      child: makeChar(delim, delimConf.font,
-          lookupChar(delim, delimConf.font, Mode.math), options),
+      child: makeChar(
+          delim,
+          delimConf.font,
+          lookupChar(delim, delimConf.font, Mode.math),
+          options.havingStyle(delimConf.style)),
     );
   } else {
     return makeStackedDelim(delim, minDelimiterHeight, Mode.math, options);
