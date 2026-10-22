@@ -448,14 +448,15 @@ class RenderLine extends RenderBox
         alignerOrSpacer.layout(BoxConstraints.tightFor(width: 0.0),
             parentUsesSize: true);
       } else {
+        final nextAligned = index + 1 < alignColWidth.length - 1
+            ? alignColWidth[index + 1]
+            : 0.0;
+        final nextOwn =
+            index + 1 < colWidths.length - 1 ? colWidths[index + 1] : 0.0;
         alignerOrSpacer.layout(
           BoxConstraints.tightFor(
-            width: alignColWidth[index] +
-                (index + 1 < alignColWidth.length - 1
-                    ? alignColWidth[index + 1]
-                    : 0) -
-                colWidths[index] -
-                (index + 1 < colWidths.length - 1 ? colWidths[index + 1] : 0),
+            width: (alignColWidth[index] - colWidths[index]) +
+                (nextAligned - nextOwn),
           ),
           parentUsesSize: true,
         );

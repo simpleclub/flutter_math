@@ -117,6 +117,11 @@ void main() {
     location: 'golden/eqnarray.png',
   );
 
+  testTexToRender(
+    'Aligned spacers should not get a negative width',
+    r'\begin{aligned}y&=10&x&=y\end{aligned}',
+  );
+
   testTexToMatchGoldenFile(
     'LeftRight renderer',
     r'\left( \dfrac{x}{y} \middle| \dfrac{y}{z} \right> \left( x \middle| y \right> \left. \dfrac{x}{y} \right\}',
