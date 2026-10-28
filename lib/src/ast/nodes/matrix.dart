@@ -329,8 +329,11 @@ class MatrixLayoutDelegate extends IntrinsicLayoutDelegate<int> {
       pos += arraycolsep;
     }
 
-    colPos[cols - 1] = pos;
-    pos += colWidths[cols - 1];
+    // `\begin{matrix}\end{matrix}` has no columns.
+    if (cols > 0) {
+      colPos[cols - 1] = pos;
+      pos += colWidths[cols - 1];
+    }
     pos += hskipBeforeAndAfter ? arraycolsep : 0.0;
     vLinePos[cols] = pos;
     pos += (vLines[cols] != MatrixSeparatorStyle.none) ? ruleThickness : 0.0;
